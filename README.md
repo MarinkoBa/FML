@@ -1,1 +1,1 @@
-# FML REINFROCEMENT LEARNING - Bomberman Agent
+# FML: ReinforcementLearning - Bomberman Agent
