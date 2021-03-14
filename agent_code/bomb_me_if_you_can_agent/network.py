@@ -3,10 +3,10 @@ import torch.nn as nn
 import numpy as np
 
 
-class Net(nn.Module):
+class Q_Net(nn.Module):
 
     def __init__(self):
-        super(Net, self).__init__()
+        super(Q_Net, self).__init__()
 
         self.conv1 = ConvNormRelu(7, 128, kernel_size=3, stride=2)
         self.conv2 = ConvNormRelu(128, 128, kernel_size=3, stride=2)

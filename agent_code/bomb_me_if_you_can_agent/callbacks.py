@@ -5,7 +5,7 @@ import random
 import numpy as np
 import torch
 from torch import nn
-from agent_code.bomb_me_if_you_can_agent.network import Net
+from agent_code.bomb_me_if_you_can_agent.network import Q_Net
 
 ACTIONS = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', 'BOMB']
 
@@ -44,32 +44,14 @@ def act(self, game_state: dict) -> str:
     :return: The action to take as a string.
     """
     # todo Exploration vs exploitation
-    random_prob = .9
+    random_prob = .1
     if self.train and random.random() < random_prob:
-
-        network = Net()
-        #optimizer = torch.optim.Adam(params=network.parameters(), lr=0.0001)
-        #criterion = nn.CrossEntropyLoss()
-
-        #optimizer.zero_grad()
-        network.eval()
-        network.double()
-        prediction = network(self.transitions[0][2])
-
-        action_pos = torch.argmax(prediction)
-
-        #loss = criterion(prediction, label)
-        #loss.backward()
-        #optimizer.step()
-
-
-
         self.logger.debug("Choosing action purely at random.")
         # 80%: walk in any direction. 10% wait. 10% bomb.
-        #return np.random.choice(ACTIONS, p=[.2, .2, .2, .2, .1, .1])
-        return ACTIONS[action_pos]
+        return np.random.choice(ACTIONS, p=[.2, .2, .2, .2, .1, .1])
 
     self.logger.debug("Querying model for action.")
+    # TODO Model prediction
     return np.random.choice(ACTIONS, p=self.model)
 
 
@@ -95,13 +77,10 @@ def state_to_features(game_state: dict) -> np.array:
     channels = []
 
     #############
-    field = game_state.get('field')
-
     self_coord = game_state.get('self')[3]
     self_ch = np.zeros_like(game_state.get('field'))
     self_ch[self_coord[0], self_coord[1]] = 1
-    self_ch_ten = torch.from_numpy(self_ch)
-    self_ch_ten = self_ch_ten.double()
+    self_ch_ten = torch.from_numpy(self_ch).double()
     #self_ch_ten = self_ch_ten.reshape(-1)
     #channels.append(self_ch_ten)
 
@@ -110,24 +89,21 @@ def state_to_features(game_state: dict) -> np.array:
     other0_coord = others[0][3]
     other0_ch = np.zeros_like(game_state.get('field'))
     other0_ch[other0_coord[0], other0_coord[1]] = 1
-    other0_ch_ten = torch.from_numpy(other0_ch)
-    other0_ch_ten = other0_ch_ten.double()
+    other0_ch_ten = torch.from_numpy(other0_ch).double()
     #other0_ch_ten = other0_ch_ten.reshape(-1)
     #channels.append(other0_ch_ten)
 
     other1_coord = others[1][3]
     other1_ch = np.zeros_like(game_state.get('field'))
     other1_ch[other1_coord[0], other1_coord[1]] = 1
-    other1_ch_ten = torch.from_numpy(other1_ch)
-    other1_ch_ten = other1_ch_ten.double()
+    other1_ch_ten = torch.from_numpy(other1_ch).double()
     #other1_ch_ten=other1_ch_ten.reshape(-1)
     #channels.append(other1_ch_ten)
 
     other2_coord = others[2][3]
     other2_ch = np.zeros_like(game_state.get('field'))
     other2_ch[other2_coord[0], other2_coord[1]] = 1
-    other2_ch_ten = torch.from_numpy(other2_ch)
-    other2_ch_ten = other2_ch_ten.double()
+    other2_ch_ten = torch.from_numpy(other2_ch).double()
     #other2_ch_ten = other2_ch_ten.reshape(-1)
     #channels.append(other2_ch_ten)
 
@@ -136,8 +112,7 @@ def state_to_features(game_state: dict) -> np.array:
     if len(bombs) > 0:
         for bomb in bombs:
             bombs_ch[bomb[0], bomb[1]] = 1
-    bombs_ch_ten = torch.from_numpy(bombs_ch)
-    bombs_ch_ten = bombs_ch_ten.double()
+    bombs_ch_ten = torch.from_numpy(bombs_ch).double()
 
     #bombs_ch_ten = bombs_ch_ten.reshape(-1)
     #channels.append(bombs_ch_ten)
@@ -147,14 +122,12 @@ def state_to_features(game_state: dict) -> np.array:
     if len(coins) > 0:
         for coin in coins:
             coins_ch[coin[0], coin[1]] = 1
-    coins_ch_ten = torch.from_numpy(coins_ch)
-    coins_ch_ten = coins_ch_ten.double()
+    coins_ch_ten = torch.from_numpy(coins_ch).double()
     #coins_ch_ten = coins_ch_ten.reshape(-1)
     #channels.append(coins_ch_ten)
 
     explosion_map_ch = game_state.get('explosion_map')
-    explosion_map_ch_ten = torch.from_numpy(explosion_map_ch)
-    explosion_map_ch_ten = explosion_map_ch_ten.double()
+    explosion_map_ch_ten = torch.from_numpy(explosion_map_ch).double()
     #explosion_map_ch_ten = explosion_map_ch_ten.reshape(-1)
     #channels.append(explosion_map_ch_ten)
     #########
