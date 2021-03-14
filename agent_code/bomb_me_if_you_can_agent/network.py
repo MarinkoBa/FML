@@ -8,10 +8,10 @@ class Q_Net(nn.Module):
     def __init__(self):
         super(Q_Net, self).__init__()
 
-        self.conv1 = ConvNormRelu(7, 128, kernel_size=3, stride=2)
-        self.conv2 = ConvNormRelu(128, 128, kernel_size=3, stride=2)
-        self.conv3 = ConvNormRelu(128, 128, kernel_size=3, stride=1)
-        self.fc = nn.Linear(128, 6)
+        self.conv1 = ConvNormRelu(5, 32, kernel_size=3, stride=2)
+        self.conv2 = ConvNormRelu(32, 32, kernel_size=3, stride=2)
+        self.conv3 = ConvNormRelu(32, 32, kernel_size=3, stride=1)
+        self.fc = nn.Linear(32, 6)
 
     def forward(self, x):
 

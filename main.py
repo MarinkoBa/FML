@@ -41,7 +41,7 @@ def main(args):
     play_parser.add_argument("--continue-without-training", default=False, action="store_true")
     # play_parser.add_argument("--single-process", default=False, action="store_true")
 
-    play_parser.add_argument("--n-rounds", type=int, default=10, help="How many rounds to play")
+    play_parser.add_argument("--n-rounds", type=int, default=1000, help="How many rounds to play")
     play_parser.add_argument("--save-replay", default=False, action="store_true", help="Store the game as .pt for a replay")
     play_parser.add_argument("--no-gui", default=False, action="store_true", help="Deactivate the user interface and play as fast as possible.")
 
@@ -56,6 +56,8 @@ def main(args):
                          help="Wait for key press until next movement")
         sub.add_argument("--update-interval", type=float, default=0.1,
                          help="How often agents take steps (ignored without GUI)")
+        #sub.add_argument("--update-interval", type=float, default=3,
+        #                                  help="How often agents take steps (ignored without GUI)")
 
         # Video?
         sub.add_argument("--make-video", default=False, action="store_true",

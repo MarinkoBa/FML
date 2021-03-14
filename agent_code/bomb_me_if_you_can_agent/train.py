@@ -3,6 +3,9 @@ import random
 from collections import namedtuple, deque
 from typing import List
 
+import torch
+import torch.nn as nn
+
 import events as e
 from .callbacks import state_to_features
 
@@ -11,8 +14,16 @@ Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
 # Hyper parameters -- DO modify
-TRANSITION_HISTORY_SIZE = 3  # keep only ... last transitions
+TRANSITION_HISTORY_SIZE = 10000  # keep only ... last transitions
 RECORD_ENEMY_TRANSITIONS = 1.0  # record enemy transitions with probability ...
+
+BATCH_SIZE = 128
+GAMMA = 0.999
+EPS_START = 0.9
+EPS_END = 0.05
+EPS_DECAY = 200
+TARGET_UPDATE = 10
+
 
 # Events
 PLACEHOLDER_EVENT = "PLACEHOLDER"
@@ -56,6 +67,31 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, new_game_
 
     # state_to_features is defined in callbacks.py
     self.transitions.append(Transition(state_to_features(old_game_state), self_action, state_to_features(new_game_state), reward_from_events(self, events)))
+    # TODO check if Batch filled, train
+    if len(self.transitions) >= BATCH_SIZE and self.train:
+        batch = random.sample(self.transitions, BATCH_SIZE)
+
+        optimizer = torch.optim.Adam(params=self.model.parameters(), lr=0.0001)
+        criterion = nn.SmoothL1Loss()
+        optimizer.zero_grad()
+
+        game_state = list(zip(*batch))[0]
+        action = list(zip(*batch))[1]
+        new_game_state = list(zip(*batch))[2]
+        reward = list(zip(*batch))[3]
+
+
+        # TODO modify input -> tensor 128x7x17x17
+        #game_state_features = state_to_features(game_state)
+        prediction = self.model(game_state)
+        action_pos = torch.argmax(prediction)
+
+        # loss = criterion(prediction, label)
+        # loss.backward()
+        # optimizer.step()
+
+
+        # train
 
 
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
@@ -102,3 +138,10 @@ def reward_from_events(self, events: List[str]) -> int:
             reward_sum += game_rewards[event]
     self.logger.info(f"Awarded {reward_sum} for events {', '.join(events)}")
     return reward_sum
+
+def sample_batch(self):
+    return random.sample(self.transitions, BATCH_SIZE)
+
+
+
+
