@@ -14,12 +14,12 @@ class Q_Net(nn.Module):
         self.fc = nn.Linear(32, 6)
 
     def forward(self, x):
+        x = x.to(device='cuda:0')
 
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.conv3(x)
-        x = self.fc(x.flatten())
-
+        x = self.fc(x.reshape(x.shape[0], 32))
 
         return x
 
@@ -33,6 +33,6 @@ class ConvNormRelu(nn.Module):
 
     def forward(self, x):
         x = self.convolution(x)
-        x = self.batch_norm(x)
+        #x = self.batch_norm(x)
         x = self.relu(x)
         return x

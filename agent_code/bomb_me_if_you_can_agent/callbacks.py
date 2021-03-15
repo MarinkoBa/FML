@@ -7,9 +7,7 @@ import torch
 from torch import nn
 from agent_code.bomb_me_if_you_can_agent.network import Q_Net
 import timeit
-
-
-ACTIONS = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', 'BOMB']
+from agent_code.bomb_me_if_you_can_agent import constants
 
 
 def setup(self):
@@ -31,8 +29,10 @@ def setup(self):
         #weights = np.random.rand(len(ACTIONS))
         #self.model = weights / weights.sum()
         self.model = Q_Net()
-        self.model.eval()
+        self.model.cuda(0)
+        self.model.train()
         self.model.double()
+        self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
         with open("my-saved-model.pt", "rb") as file:
@@ -54,38 +54,25 @@ def act(self, game_state: dict) -> str:
     print("start")
 
     # todo Exploration vs exploitation
-    random_prob = .1
+    random_prob = constants.EPS
     if self.train and random.random() < random_prob:
         self.logger.debug("Choosing action purely at random.")
 
         # 80%: walk in any direction. 10% wait. 10% bomb.
         end = timeit.timeit()
         print(str((end - start)*1000) + " sec RANDOM")
-        action = np.random.choice(ACTIONS, p=[.2, .2, .2, .2, .1, .1])
+        action = np.random.choice(constants.ACTIONS, p=[.2, .2, .2, .2, .1, .1])
         print(str(action))
         return action
-
-
-    # optimizer = torch.optim.Adam(params=network.parameters(), lr=0.0001)
-    # criterion = nn.CrossEntropyLoss()
-
-    # optimizer.zero_grad()
-
 
     game_state_features = state_to_features(game_state)
     prediction = self.model(game_state_features)
     action_pos = torch.argmax(prediction)
 
-    # loss = criterion(prediction, label)
-    # loss.backward()
-    # optimizer.step()
-
-
-    # TODO Model prediction
     end = timeit.timeit()
     print(str((end - start) * 1000) + " sec MODEL")
-    print(str(ACTIONS[action_pos]))
-    return ACTIONS[action_pos]
+    print(str(constants.ACTIONS[action_pos]))
+    return constants.ACTIONS[action_pos]
 
 
 
@@ -108,15 +95,10 @@ def state_to_features(game_state: dict) -> np.array:
     if game_state is None:
         return None
 
-    # For example, you could construct several channels of equal shape, ...
-    #stacked_channels = []
-
-    #############
     self_coord = game_state.get('self')[3]
     self_ch = np.zeros_like(game_state.get('field'))
     self_ch[self_coord[0], self_coord[1]] = 1
     self_ch_ten = torch.from_numpy(self_ch).double()
-
 
     others = game_state.get('others')
     other_agents_ch = np.zeros_like(game_state.get('field'))
@@ -152,11 +134,6 @@ def state_to_features(game_state: dict) -> np.array:
     explosion_map_ch = game_state.get('explosion_map')
     explosion_map_ch_ten = torch.from_numpy(explosion_map_ch).double()
 
-    #########
-
-    #channels.append(...)
-    # concatenate them as a feature tensor (they must have the same shape), ...
-    #stacked_channels = np.stack(channels)
 
     stacked_channels = torch.stack(
         (self_ch_ten, other0_ch_ten, bombs_ch_ten, coins_ch_ten, explosion_map_ch_ten), 0)

@@ -41,7 +41,7 @@ def main(args):
     play_parser.add_argument("--continue-without-training", default=False, action="store_true")
     # play_parser.add_argument("--single-process", default=False, action="store_true")
 
-    play_parser.add_argument("--n-rounds", type=int, default=1000, help="How many rounds to play")
+    play_parser.add_argument("--n-rounds", type=int, default=100000, help="How many rounds to play")
     play_parser.add_argument("--save-replay", default=False, action="store_true", help="Store the game as .pt for a replay")
     play_parser.add_argument("--no-gui", default=False, action="store_true", help="Deactivate the user interface and play as fast as possible.")
 
@@ -120,6 +120,8 @@ def main(args):
         # Main game loop
         while not round_finished:
             if has_gui:
+                if not world.running:
+                    round_finished = True
                 # Grab GUI events
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -150,6 +152,7 @@ def main(args):
                         sleep(sleep_time)
             elif not world.running:
                 round_finished = True
+
             else:
                 # Non-gui mode, check for round end in 1ms
                 sleep(0.001)

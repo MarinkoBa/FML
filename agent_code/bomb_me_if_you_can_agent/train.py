@@ -8,26 +8,14 @@ import torch.nn as nn
 
 import events as e
 from .callbacks import state_to_features
+from agent_code.bomb_me_if_you_can_agent import constants
 
 # This is only an example!
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
-# Hyper parameters -- DO modify
-TRANSITION_HISTORY_SIZE = 10000  # keep only ... last transitions
-RECORD_ENEMY_TRANSITIONS = 1.0  # record enemy transitions with probability ...
 
-BATCH_SIZE = 128
-GAMMA = 0.999
-EPS_START = 0.9
-EPS_END = 0.05
-EPS_DECAY = 200
-TARGET_UPDATE = 10
-
-
-# Events
-PLACEHOLDER_EVENT = "PLACEHOLDER"
-
+PLACEHOLDER_EVENT = 'PLACEHOLDER'
 
 def setup_training(self):
     """
@@ -39,10 +27,10 @@ def setup_training(self):
     """
     # Example: Setup an array that will note transition tuples
     # (s, a, r, s')
-    self.transitions = deque(maxlen=TRANSITION_HISTORY_SIZE)
+    self.transitions = deque(maxlen=constants.TRANSITION_HISTORY_SIZE)
 
 
-def game_events_occurred(self, old_game_state: dict, self_action: str, new_game_state: dict, events: List[str]):
+def game_events_occurred(self, old_game_state: dict, self_action: str, next_game_state: dict, events: List[str]):
     """
     Called once per step to allow intermediate rewards based on game events.
 
@@ -56,40 +44,68 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, new_game_
     :param self: This object is passed to all callbacks and you can set arbitrary values.
     :param old_game_state: The state that was passed to the last call of `act`.
     :param self_action: The action that you took.
-    :param new_game_state: The state the agent is in now.
+    :param next_game_state: The state the agent is in now.
     :param events: The events that occurred when going from  `old_game_state` to `new_game_state`
     """
-    self.logger.debug(f'Encountered game event(s) {", ".join(map(repr, events))} in step {new_game_state["step"]}')
+    self.logger.debug(f'Encountered game event(s) {", ".join(map(repr, events))} in step {next_game_state["step"]}')
 
     # Idea: Add your own events to hand out rewards
     if ...:
         events.append(PLACEHOLDER_EVENT)
 
     # state_to_features is defined in callbacks.py
-    self.transitions.append(Transition(state_to_features(old_game_state), self_action, state_to_features(new_game_state), reward_from_events(self, events)))
+    action = self_action
+    if(self_action != None):
+        action = self.actions.index(self_action)
+
+    transition = Transition(state_to_features(old_game_state), action, state_to_features(next_game_state), reward_from_events(self, events))
+    if transition[0] != None:
+        self.transitions.append(transition)
     # TODO check if Batch filled, train
-    if len(self.transitions) >= BATCH_SIZE and self.train:
-        batch = random.sample(self.transitions, BATCH_SIZE)
+    if len(self.transitions) >= constants.BATCH_SIZE and self.train:
+        batch = random.sample(self.transitions, constants.BATCH_SIZE)
+        transitions = Transition(*zip(*batch))
+
 
         optimizer = torch.optim.Adam(params=self.model.parameters(), lr=0.0001)
         criterion = nn.SmoothL1Loss()
-        optimizer.zero_grad()
+        criterion.cuda(0)
 
-        game_state = list(zip(*batch))[0]
-        action = list(zip(*batch))[1]
-        new_game_state = list(zip(*batch))[2]
-        reward = list(zip(*batch))[3]
+
+        next_game_state_none_ind = [i for i, val in enumerate(transitions.next_state) if val == None]
+        next_game_state_filled_ind = [i for i, val in enumerate(transitions.next_state) if val != None]
+        next_game_state_filled_val = [val for i, val in enumerate(transitions.next_state) if val != None]
+
+        game_state = torch.cat(transitions.state)
+        action = torch.tensor(transitions.action)
+        next_game_state = torch.cat(next_game_state_filled_val)
+        reward = torch.tensor(transitions.reward)
 
 
         # TODO modify input -> tensor 128x7x17x17
         #game_state_features = state_to_features(game_state)
-        prediction = self.model(game_state)
-        action_pos = torch.argmax(prediction)
 
-        # loss = criterion(prediction, label)
-        # loss.backward()
-        # optimizer.step()
 
+        #list_game_state = list(game_state)
+        #cated_tensor = torch.cat((list_game_state))
+        #prediction = self.model(game_state).gather(0, action)
+        q_val_taken_actions = torch.index_select(self.model(game_state.to(device='cuda:0')), 1, action.to(device='cuda'))[:, 0]
+
+        q_val_next_state = torch.max(self.model(next_game_state), dim=1).values.to(device='cuda')
+        q_val_next_state_full = torch.zeros(game_state.shape[0]).double().to(device='cuda')
+        q_val_next_state_full[next_game_state_filled_ind] = q_val_next_state
+
+        final_state_action_values = (q_val_next_state_full * constants.GAMMA) + reward.to(device='cuda')
+
+
+        #torch.index_select(prediction, 1, action)
+
+        #action_pos = torch.argmax(prediction, dim=1)
+
+        loss = criterion(q_val_taken_actions, final_state_action_values)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
         # train
 
@@ -107,7 +123,23 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     :param self: The same object that is passed to all of your callbacks.
     """
     self.logger.debug(f'Encountered event(s) {", ".join(map(repr, events))} in final step')
-    self.transitions.append(Transition(state_to_features(last_game_state), last_action, None, reward_from_events(self, events)))
+    #self.transitions.append(Transition(state_to_features(last_game_state), last_action, None, reward_from_events(self, events)))
+
+    action = last_action
+    if(last_action != None):
+        action = self.actions.index(last_action)
+
+    transition = Transition(state_to_features(last_game_state), action, None, reward_from_events(self, events))
+    if transition[0] != None:
+        self.transitions.append(transition)
+
+    if constants.EPS >= constants.EPS_END:
+        constants.EPS = constants.EPS - (constants.EPS / 1000)
+
+    print()
+    print(str(constants.EPS))
+    print()
+
 
     # Store the model
     with open("my-saved-model.pt", "wb") as file:
@@ -123,7 +155,7 @@ def reward_from_events(self, events: List[str]) -> int:
     """
     game_rewards = {
         e.COIN_COLLECTED: 1,
-        e.KILLED_OPPONENT: 5,
+        #e.KILLED_OPPONENT: 5,
         e.INVALID_ACTION: -1,
         e.COIN_FOUND: 0.5,
         e.CRATE_DESTROYED: 0.5,
@@ -140,7 +172,7 @@ def reward_from_events(self, events: List[str]) -> int:
     return reward_sum
 
 def sample_batch(self):
-    return random.sample(self.transitions, BATCH_SIZE)
+    return random.sample(self.transitions, constants.BATCH_SIZE)
 
 
 
