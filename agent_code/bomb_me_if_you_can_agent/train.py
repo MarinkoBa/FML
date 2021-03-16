@@ -50,8 +50,8 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
     self.logger.debug(f'Encountered game event(s) {", ".join(map(repr, events))} in step {next_game_state["step"]}')
 
     # Idea: Add your own events to hand out rewards
-    if ...:
-        events.append(PLACEHOLDER_EVENT)
+    if e.BOMB_EXPLODED in events and e.KILLED_SELF not in events:
+        events.append(e.SURVIVED_BOMB)
 
     # state_to_features is defined in callbacks.py
     action = self_action
@@ -149,20 +149,24 @@ def reward_from_events(self, events: List[str]) -> int:
     certain behavior.
     """
     game_rewards = {
-        #e.COIN_COLLECTED: 1,
-        #e.KILLED_OPPONENT: 5,
-        e.INVALID_ACTION: -10,
-        e.WAITED: -5,
-        e.MOVED_UP: 50,
-        e.MOVED_DOWN: 50,
-        e.MOVED_LEFT: 50,
-        e.MOVED_RIGHT: 50,
-        #e.COIN_FOUND: 0.5,
-        #e.CRATE_DESTROYED: 0.5,
-        e.GOT_KILLED: -50,
-        e.KILLED_SELF: -50,
-        #e.SURVIVED_ROUND: 10
-        #PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
+        e.COIN_COLLECTED: 3,
+        e.KILLED_OPPONENT: 5,
+        e.INVALID_ACTION: -3,
+        e.COIN_FOUND: 1,
+        e.CRATE_DESTROYED: 1,
+        e.GOT_KILLED: -5,
+        e.KILLED_SELF: -5,
+        e.SURVIVED_ROUND: 10,
+        e.OPPONENT_ELIMINATED: 5,  # nicht durch unsern agent direkt gekillt
+        e.BOMB_DROPPED: 0,
+        e.BOMB_EXPLODED: 0,
+        e.SURVIVED_BOMB: 2,
+
+        e.MOVED_UP: -0.1,
+        e.MOVED_DOWN: -0.1,
+        e.MOVED_LEFT: -0.1,
+        e.MOVED_RIGHT: -0.1,
+        e.WAITED: -0.1,
     }
     reward_sum = 0
     for event in events:

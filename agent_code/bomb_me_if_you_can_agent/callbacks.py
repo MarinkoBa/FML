@@ -61,7 +61,7 @@ def act(self, game_state: dict) -> str:
     print("start")
 
     # todo Exploration vs exploitation
-    random_prob = 0.1
+    random_prob = constants.EPS
     if self.train and random.random() < random_prob:
         self.logger.debug("Choosing action purely at random.")
 
@@ -102,51 +102,85 @@ def state_to_features(game_state: dict) -> np.array:
     if game_state is None:
         return None
 
+    # field_ch = game_state.get('field')
+    # field_ch_ten = torch.from_numpy(field_ch).double()
+    #
+    # self_coord = game_state.get('self')[3]
+    # self_ch = np.zeros_like(game_state.get('field'))
+    # self_ch[self_coord[0], self_coord[1]] = 1
+    # self_ch_ten = torch.from_numpy(self_ch).double()
+    #
+    # others = game_state.get('others')
+    # other_agents_ch = np.zeros_like(game_state.get('field'))
+    #
+    # if len(others) >= 1:
+    #     other0_coord = others[0][3]
+    #     other_agents_ch[other0_coord[0], other0_coord[1]] = 1
+    #
+    # if len(others) >= 2:
+    #     other1_coord = others[1][3]
+    #     other_agents_ch[other1_coord[0], other1_coord[1]] = 1
+    #
+    # if len(others) >= 3:
+    #     other2_coord = others[2][3]
+    #     other_agents_ch[other2_coord[0], other2_coord[1]] = 1
+    #
+    # other0_ch_ten = torch.from_numpy(other_agents_ch).double()
+    #
+    # bombs = game_state.get('bombs')
+    # bombs_ch = np.zeros_like(game_state.get('field'))
+    # if len(bombs) > 0:
+    #     for bomb in bombs:
+    #         bombs_ch[bomb[0], bomb[1]] = 1
+    # bombs_ch_ten = torch.from_numpy(bombs_ch).double()
+    #
+    # coins = game_state.get('coins')
+    # coins_ch = np.zeros_like(game_state.get('field'))
+    # if len(coins) > 0:
+    #     for coin in coins:
+    #         coins_ch[coin[0], coin[1]] = 1
+    # coins_ch_ten = torch.from_numpy(coins_ch).double()
+    #
+    # explosion_map_ch = game_state.get('explosion_map')
+    # explosion_map_ch_ten = torch.from_numpy(explosion_map_ch).double()
     field_ch = game_state.get('field')
-    field_ch_ten = torch.from_numpy(field_ch).double()
 
     self_coord = game_state.get('self')[3]
-    self_ch = np.zeros_like(game_state.get('field'))
-    self_ch[self_coord[0], self_coord[1]] = 1
-    self_ch_ten = torch.from_numpy(self_ch).double()
+    field_ch[self_coord[0], self_coord[1]] = 2
+
 
     others = game_state.get('others')
-    other_agents_ch = np.zeros_like(game_state.get('field'))
 
     if len(others) >= 1:
         other0_coord = others[0][3]
-        other_agents_ch[other0_coord[0], other0_coord[1]] = 1
+        field_ch[other0_coord[0], other0_coord[1]] = 3
 
     if len(others) >= 2:
         other1_coord = others[1][3]
-        other_agents_ch[other1_coord[0], other1_coord[1]] = 1
+        field_ch[other1_coord[0], other1_coord[1]] = 3
 
     if len(others) >= 3:
         other2_coord = others[2][3]
-        other_agents_ch[other2_coord[0], other2_coord[1]] = 1
+        field_ch[other2_coord[0], other2_coord[1]] = 3
 
-    other0_ch_ten = torch.from_numpy(other_agents_ch).double()
 
     bombs = game_state.get('bombs')
-    bombs_ch = np.zeros_like(game_state.get('field'))
     if len(bombs) > 0:
         for bomb in bombs:
-            bombs_ch[bomb[0], bomb[1]] = 1
-    bombs_ch_ten = torch.from_numpy(bombs_ch).double()
+            field_ch[bomb[0], bomb[1]] = 4
 
     coins = game_state.get('coins')
-    coins_ch = np.zeros_like(game_state.get('field'))
     if len(coins) > 0:
         for coin in coins:
-            coins_ch[coin[0], coin[1]] = 1
-    coins_ch_ten = torch.from_numpy(coins_ch).double()
+            field_ch[coin[0], coin[1]] = 5
+
+    field_ch_ten = torch.from_numpy(field_ch).double()
 
     explosion_map_ch = game_state.get('explosion_map')
     explosion_map_ch_ten = torch.from_numpy(explosion_map_ch).double()
 
-
     #stacked_channels = torch.stack((self_ch_ten, other0_ch_ten, bombs_ch_ten, coins_ch_ten, explosion_map_ch_ten), 0)
-    stacked_channels = torch.stack((field_ch_ten, self_ch_ten), 0)
+    stacked_channels = torch.stack((field_ch_ten, explosion_map_ch_ten), 0)
     stacked_channels = stacked_channels.unsqueeze(0)
     #stacked_channels = stacked_channels.unsqueeze(0)
 

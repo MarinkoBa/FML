@@ -2,10 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/replay_memory.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/callbacks.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/callbacks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/network.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/network.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/my-saved-model_2.pt" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/my-saved-model_2.pt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/events.py" beforeDir="false" afterPath="$PROJECT_DIR$/events.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,7 +61,7 @@
         </ENTRIES>
       </EXTENSION>
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
-      <option name="PARAMETERS" value="play" />
+      <option name="PARAMETERS" value="play --agents bomb_me_if_you_can_agent --train 1" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -90,6 +91,16 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+      </list>
+    </option>
+  </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
@@ -103,6 +114,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/FML$main.coverage" NAME="main Coverage Results" MODIFIED="1615658832552" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/FML$main.coverage" NAME="main Coverage Results" MODIFIED="1615907884870" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
