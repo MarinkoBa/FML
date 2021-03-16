@@ -26,12 +26,12 @@ def setup(self):
     """
     if self.train or not os.path.isfile("my-saved-model.pt"):
         self.logger.info("Setting up model from scratch.")
-        #weights = np.random.rand(len(ACTIONS))
-        #self.model = weights / weights.sum()
+
         self.model = Q_Net()
         self.model.cuda(0)
         self.model.train()
         self.model.double()
+
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
@@ -54,7 +54,7 @@ def act(self, game_state: dict) -> str:
     print("start")
 
     # todo Exploration vs exploitation
-    random_prob = constants.EPS
+    random_prob = 0.1
     if self.train and random.random() < random_prob:
         self.logger.debug("Choosing action purely at random.")
 
@@ -94,6 +94,9 @@ def state_to_features(game_state: dict) -> np.array:
     # This is the dict before the game begins and after it ends
     if game_state is None:
         return None
+
+    field_ch = game_state.get('field')
+    field_ch_ten = torch.from_numpy(field_ch).double()
 
     self_coord = game_state.get('self')[3]
     self_ch = np.zeros_like(game_state.get('field'))
@@ -135,10 +138,10 @@ def state_to_features(game_state: dict) -> np.array:
     explosion_map_ch_ten = torch.from_numpy(explosion_map_ch).double()
 
 
-    stacked_channels = torch.stack(
-        (self_ch_ten, other0_ch_ten, bombs_ch_ten, coins_ch_ten, explosion_map_ch_ten), 0)
-
+    #stacked_channels = torch.stack((self_ch_ten, other0_ch_ten, bombs_ch_ten, coins_ch_ten, explosion_map_ch_ten), 0)
+    stacked_channels = torch.stack((field_ch_ten, self_ch_ten), 0)
     stacked_channels = stacked_channels.unsqueeze(0)
+    #stacked_channels = stacked_channels.unsqueeze(0)
 
     # and return them as a vector
     return stacked_channels
