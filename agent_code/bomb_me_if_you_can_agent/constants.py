@@ -13,5 +13,5 @@ TRANSITIONS_AMOUNT_UPDATE = 50
 
 
 # Hyper parameters -- DO modify
-TRANSITION_HISTORY_SIZE = 10000  # keep only ... last transitions
+TRANSITION_HISTORY_SIZE = 1000  # keep only ... last transitions
 RECORD_ENEMY_TRANSITIONS = 1.0  # record enemy transitions with probability ...

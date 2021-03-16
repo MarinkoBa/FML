@@ -67,11 +67,6 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
         transitions = Transition(*zip(*batch))
 
 
-        optimizer = torch.optim.Adam(params=self.model.parameters(), lr=0.0001)
-        criterion = nn.SmoothL1Loss()
-        criterion.cuda(0)
-
-
         next_game_state_none_ind = [i for i, val in enumerate(transitions.next_state) if val == None]
         next_game_state_filled_ind = [i for i, val in enumerate(transitions.next_state) if val != None]
         next_game_state_filled_val = [val for i, val in enumerate(transitions.next_state) if val != None]
@@ -102,10 +97,10 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
 
         #action_pos = torch.argmax(prediction, dim=1)
 
-        loss = criterion(q_val_taken_actions, final_state_action_values)
-        optimizer.zero_grad()
+        loss = self.criterion(q_val_taken_actions, final_state_action_values)
+        self.optimizer.zero_grad()
         loss.backward()
-        optimizer.step()
+        self.optimizer.step()
 
         # train
 
@@ -142,7 +137,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
 
     # Store the model
-    with open("my-saved-model.pt", "wb") as file:
+    with open("my-saved-model_2.pt", "wb") as file:
         pickle.dump(self.model, file)
 
 
@@ -154,14 +149,19 @@ def reward_from_events(self, events: List[str]) -> int:
     certain behavior.
     """
     game_rewards = {
-        e.COIN_COLLECTED: 1,
+        #e.COIN_COLLECTED: 1,
         #e.KILLED_OPPONENT: 5,
-        e.INVALID_ACTION: -1,
-        e.COIN_FOUND: 0.5,
-        e.CRATE_DESTROYED: 0.5,
-        e.GOT_KILLED: -5,
-        e.KILLED_SELF: -5,
-        e.SURVIVED_ROUND: 10
+        e.INVALID_ACTION: -10,
+        e.WAITED: -5,
+        e.MOVED_UP: 50,
+        e.MOVED_DOWN: 50,
+        e.MOVED_LEFT: 50,
+        e.MOVED_RIGHT: 50,
+        #e.COIN_FOUND: 0.5,
+        #e.CRATE_DESTROYED: 0.5,
+        e.GOT_KILLED: -50,
+        e.KILLED_SELF: -50,
+        #e.SURVIVED_ROUND: 10
         #PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
     }
     reward_sum = 0

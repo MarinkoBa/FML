@@ -32,6 +32,13 @@ def setup(self):
         self.model.train()
         self.model.double()
 
+        self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=0.001)
+        self.criterion = nn.SmoothL1Loss()
+        self.criterion.cuda(0)
+
+
+
+
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
