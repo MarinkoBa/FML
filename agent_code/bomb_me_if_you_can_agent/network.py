@@ -4,35 +4,22 @@ import numpy as np
 
 
 class Q_Net(nn.Module):
-
     def __init__(self):
-        super(Q_Net, self).__init__()
+        super().__init__()
 
-        self.conv1 = ConvNormRelu(2, 32, kernel_size=3, stride=2)
-        self.conv2 = ConvNormRelu(32, 32, kernel_size=3, stride=2)
-        self.conv3 = ConvNormRelu(32, 32, kernel_size=3, stride=1)
-        self.fc = nn.Linear(32, 6)
+        self.fc1 = nn.Linear(578, 64)
+        self.fc2 = nn.Linear(64, 64)
+        self.fc3 = nn.Linear(64, 6)
 
-    def forward(self, x):
-        x = x.to(device='cuda:0')
-
-        x = self.conv1(x)
-        x = self.conv2(x)
-        x = self.conv3(x)
-        x = self.fc(x.reshape(x.shape[0], 32))
-
-        return x
-
-class ConvNormRelu(nn.Module):
-
-    def __init__(self, in_channels, out_channels, **kwargs):
-        super(ConvNormRelu, self).__init__()
-        self.convolution = nn.Conv2d(in_channels, out_channels, bias=False, **kwargs)
-        self.batch_norm = nn.BatchNorm2d(out_channels, eps=0.001)
         self.relu = nn.ReLU()
 
     def forward(self, x):
-        x = self.convolution(x)
-        #x = self.batch_norm(x)
-        x = self.relu(x)
+        x = x.to(device='cuda:0')
+        x = x.reshape(x.shape[0],578)
+
+        # Takes in a state vector with length state_len and outputs an action vector with length action_len
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.fc3(x)
+
         return x

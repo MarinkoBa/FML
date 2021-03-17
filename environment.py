@@ -41,7 +41,9 @@ class GenericWorld:
     explosions: List[Explosion]
 
     gui: Union[None, "GUI"]
-    round_id: str
+
+
+    invalid_actions : int
 
     def __init__(self, args: WorldArgs):
         self.setup_logging()
@@ -248,6 +250,12 @@ class GenericWorld:
             return True
 
         if any(a.train for a in self.agents) and not self.args.continue_without_training:
+           # for a in self.agents:
+           #
+           #  self.invalid_actions = self.invalid_actions + a.events.count(e.INVALID_ACTION)
+           #  if self.invalid_actions >= 2:
+           #          self.invalid_actions = 0 # problem, bekommt survived round reward!
+           #          return True
             if not any([a.train for a in self.active_agents]):
                 self.logger.info('No training agent left alive, wrap up round')
                 return True
@@ -292,6 +300,7 @@ class BombeRLeWorld(GenericWorld):
 
         self.setup_agents(agents)
         self.new_round()
+        self.invalid_actions = 0
 
     def setup_agents(self, agents):
         # Add specified agents and start their subprocesses

@@ -109,6 +109,9 @@ class Agent:
     def add_event(self, event):
         self.events.append(event)
 
+    def get_events(self):
+        return self.events
+
     def get_state(self):
         """Provide information about this agent for the global game state."""
         return self.name, self.score, self.bombs_left, (self.x, self.y)

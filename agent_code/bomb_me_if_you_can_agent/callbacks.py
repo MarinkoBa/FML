@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from torch import nn
 from agent_code.bomb_me_if_you_can_agent.network import Q_Net
-import timeit
+import time
 from agent_code.bomb_me_if_you_can_agent import constants
 
 
@@ -27,24 +27,26 @@ def setup(self):
     if self.train or not os.path.isfile("my-saved-model.pt"):
         self.logger.info("Setting up model from scratch.")
 
-        self.model = Q_Net()
-        self.model.cuda(0)
-        self.model.train()
-        self.model.double()
+        self.policy_model = Q_Net()
+        self.policy_model.cuda(0)
+        self.policy_model.train()
+        self.policy_model.double()
 
-        self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=0.001)
+        self.optimizer = torch.optim.Adam(params=self.policy_model.parameters(), lr=0.01)
         self.criterion = nn.SmoothL1Loss()
         self.criterion.cuda(0)
 
-
-
+        self.target_model = Q_Net()
+        self.target_model.cuda()
+        self.target_model.double()
+        self.target_model.load_state_dict(self.policy_model.state_dict())
+        self.target_model.eval()
 
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
         with open("my-saved-model.pt", "rb") as file:
-            self.model = pickle.load(file)
-
+            self.policy_model = pickle.load(file)
 
 
 def act(self, game_state: dict) -> str:
@@ -57,8 +59,8 @@ def act(self, game_state: dict) -> str:
     :return: The action to take as a string.
     """
 
-    start = timeit.timeit()
-    print("start")
+    start = time.time()
+    print("")
 
     # todo Exploration vs exploitation
     random_prob = constants.EPS
@@ -66,22 +68,24 @@ def act(self, game_state: dict) -> str:
         self.logger.debug("Choosing action purely at random.")
 
         # 80%: walk in any direction. 10% wait. 10% bomb.
-        end = timeit.timeit()
-        print(str((end - start)*1000) + " sec RANDOM")
-        action = np.random.choice(constants.ACTIONS, p=[.2, .2, .2, .2, .1, .1])
+        end = time.time()
+        print(str((end - start)) + " sec RANDOM")
+        valid_actions_list = valid_actions(game_state)
+
+
+        action = np.random.choice(constants.ACTIONS, p=valid_actions_list)
+
         print(str(action))
         return action
 
     game_state_features = state_to_features(game_state)
-    prediction = self.model(game_state_features)
+    prediction = self.target_model(game_state_features)
     action_pos = torch.argmax(prediction)
 
-    end = timeit.timeit()
-    print(str((end - start) * 1000) + " sec MODEL")
+    end = time.time()
+    print(str((end - start)) + " sec MODEL")
     print(str(constants.ACTIONS[action_pos]))
     return constants.ACTIONS[action_pos]
-
-
 
 
 def state_to_features(game_state: dict) -> np.array:
@@ -148,7 +152,6 @@ def state_to_features(game_state: dict) -> np.array:
     self_coord = game_state.get('self')[3]
     field_ch[self_coord[0], self_coord[1]] = 2
 
-
     others = game_state.get('others')
 
     if len(others) >= 1:
@@ -162,7 +165,6 @@ def state_to_features(game_state: dict) -> np.array:
     if len(others) >= 3:
         other2_coord = others[2][3]
         field_ch[other2_coord[0], other2_coord[1]] = 3
-
 
     bombs = game_state.get('bombs')
     if len(bombs) > 0:
@@ -179,10 +181,25 @@ def state_to_features(game_state: dict) -> np.array:
     explosion_map_ch = game_state.get('explosion_map')
     explosion_map_ch_ten = torch.from_numpy(explosion_map_ch).double()
 
-    #stacked_channels = torch.stack((self_ch_ten, other0_ch_ten, bombs_ch_ten, coins_ch_ten, explosion_map_ch_ten), 0)
+    # stacked_channels = torch.stack((self_ch_ten, other0_ch_ten, bombs_ch_ten, coins_ch_ten, explosion_map_ch_ten), 0)
     stacked_channels = torch.stack((field_ch_ten, explosion_map_ch_ten), 0)
     stacked_channels = stacked_channels.unsqueeze(0)
-    #stacked_channels = stacked_channels.unsqueeze(0)
+    # stacked_channels = stacked_channels.unsqueeze(0)
 
     # and return them as a vector
     return stacked_channels
+
+
+def valid_actions(game_state):
+    field = game_state.get('field')
+    own_pos = game_state.get('self')[3]
+
+    # check if neighboured fields are valid
+    up = field[own_pos[0] + 1, own_pos[0]] == 0
+    down = field[own_pos[0] - 1, own_pos[0]] == 0
+    left = field[own_pos[0], own_pos[0] - 1] == 0
+    right = field[own_pos[0], own_pos[0] + 1] == 0
+
+    count = np.sum([up,right,down,left])
+
+    return [0.8*up/count, 0.8*right/count, 0.8*down/count, 0.8*left/count, 0.1, 0.1]
