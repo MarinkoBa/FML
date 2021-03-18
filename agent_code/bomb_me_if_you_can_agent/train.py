@@ -2,20 +2,23 @@ import pickle
 import random
 from collections import namedtuple, deque
 from typing import List
-
+import numpy as np
 import torch
 import torch.nn as nn
 
 import events as e
 from .callbacks import state_to_features
 from agent_code.bomb_me_if_you_can_agent import constants
+import matplotlib.pyplot as plt
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 # This is only an example!
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
-
 PLACEHOLDER_EVENT = 'PLACEHOLDER'
+
 
 def setup_training(self):
     """
@@ -28,6 +31,16 @@ def setup_training(self):
     # Example: Setup an array that will note transition tuples
     # (s, a, r, s')
     self.transitions = deque(maxlen=constants.TRANSITION_HISTORY_SIZE)
+    self.round_events = []
+    self.rewards_list = []
+
+    # setup plot
+
+    plt.title('Q-Net Training')
+    plt.xlabel('Episode')
+    plt.ylabel('Rewards')
+
+    plt.ion()
 
 
 def game_events_occurred(self, old_game_state: dict, self_action: str, next_game_state: dict, events: List[str]):
@@ -48,6 +61,8 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
     :param events: The events that occurred when going from  `old_game_state` to `new_game_state`
     """
     self.logger.debug(f'Encountered game event(s) {", ".join(map(repr, events))} in step {next_game_state["step"]}')
+    for event in events:
+        self.round_events.append(event)
 
     # Idea: Add your own events to hand out rewards
     if e.BOMB_EXPLODED in events and e.KILLED_SELF not in events:
@@ -55,10 +70,11 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
 
     # state_to_features is defined in callbacks.py
     action = self_action
-    if(self_action != None):
+    if (self_action != None):
         action = self.actions.index(self_action)
 
-    transition = Transition(state_to_features(old_game_state), action, state_to_features(next_game_state), reward_from_events(self, events))
+    transition = Transition(state_to_features(old_game_state), action, state_to_features(next_game_state),
+                            reward_from_events(self, events))
     if transition[0] != None:
         self.transitions.append(transition)
     # TODO check if Batch filled, train
@@ -103,19 +119,30 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     :param self: The same object that is passed to all of your callbacks.
     """
     self.logger.debug(f'Encountered event(s) {", ".join(map(repr, events))} in final step')
-    #self.transitions.append(Transition(state_to_features(last_game_state), last_action, None, reward_from_events(self, events)))
+    # Determine Rewards from whole episode
+    for event in events:
+        self.round_events.append(event)
+
+    self.rewards_list.append(reward_from_events(self, self.round_events))
+    self.round_events = []
+
+    plt.plot(self.rewards_list)
+    plt.savefig('training_plot.png')
+
 
     action = last_action
-    if(last_action != None):
+    if (last_action != None):
         action = self.actions.index(last_action)
 
     transition = Transition(state_to_features(last_game_state), action, None, reward_from_events(self, events))
+
+
     if transition[0] != None:
         self.transitions.append(transition)
 
     if constants.EPS >= constants.EPS_END:
         constants.EPS = constants.EPS - (constants.EPS / 1000)
-        #constants.EPS = constants.EPS - (1 / constants.EPS_DECAY)
+        # constants.EPS = constants.EPS - (1 / constants.EPS_DECAY)
 
     if last_game_state.get('round') % constants.ROUNDS_MODEL_UPDATE == 0:
         self.target_model.load_state_dict(self.training_model.state_dict())
@@ -124,9 +151,8 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
         print()
 
     print()
-    print('Epsilon: '+str(constants.EPS))
+    print('Epsilon: ' + str(constants.EPS))
     print()
-
 
     # Store the model
     with open("my-saved-model.pt", "wb") as file:
@@ -142,17 +168,17 @@ def reward_from_events(self, events: List[str]) -> int:
     """
     game_rewards = {
         e.COIN_COLLECTED: 0.5,
-       # e.KILLED_OPPONENT: 50,
-        e.INVALID_ACTION: -0.9, # macht es sinn invalide aktionen zu bestrafen?
-        #e.COIN_FOUND: 10,
-        #e.CRATE_DESTROYED: 20,
+        # e.KILLED_OPPONENT: 50,
+        e.INVALID_ACTION: -0.9,  # macht es sinn invalide aktionen zu bestrafen?
+        # e.COIN_FOUND: 10,
+        # e.CRATE_DESTROYED: 20,
         e.GOT_KILLED: -0.80,
         e.KILLED_SELF: -0.85,
-        #e.SURVIVED_ROUND: 100,
-        #e.OPPONENT_ELIMINATED: 10,  # nicht durch unsern agent direkt gekillt
-        #e.BOMB_DROPPED: 0,
-        #e.BOMB_EXPLODED: 0,
-        #e.SURVIVED_BOMB: 4,
+        # e.SURVIVED_ROUND: 100,
+        # e.OPPONENT_ELIMINATED: 10,  # nicht durch unsern agent direkt gekillt
+        # e.BOMB_DROPPED: 0,
+        # e.BOMB_EXPLODED: 0,
+        # e.SURVIVED_BOMB: 4,
 
         e.MOVED_UP: -0.001,
         e.MOVED_DOWN: -0.001,
@@ -167,9 +193,6 @@ def reward_from_events(self, events: List[str]) -> int:
     self.logger.info(f"Awarded {reward_sum} for events {', '.join(events)}")
     return reward_sum
 
+
 def sample_batch(self):
     return random.sample(self.transitions, constants.BATCH_SIZE)
-
-
-
-
