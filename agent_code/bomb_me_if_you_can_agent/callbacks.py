@@ -33,7 +33,7 @@ def setup(self):
         self.training_model.train()
         self.training_model.double()
 
-        self.optimizer = torch.optim.Adam(params=self.training_model.parameters(), lr=0.001)
+        self.optimizer = torch.optim.Adam(params=self.training_model.parameters(), lr=0.0001)
         self.criterion = nn.SmoothL1Loss()
         self.criterion.cuda(0)
 
