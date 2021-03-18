@@ -66,25 +66,17 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
         batch = random.sample(self.transitions, constants.BATCH_SIZE)
         transitions = Transition(*zip(*batch))
 
-
-        next_game_state_none_ind = [i for i, val in enumerate(transitions.next_state) if val == None]
         next_game_state_filled_ind = [i for i, val in enumerate(transitions.next_state) if val != None]
         next_game_state_filled_val = [val for i, val in enumerate(transitions.next_state) if val != None]
 
         game_state = torch.cat(transitions.state)
         action = torch.tensor(transitions.action)
-        next_game_state = torch.cat(next_game_state_filled_val)
         reward = torch.tensor(transitions.reward)
-
+        next_game_state = torch.cat(next_game_state_filled_val)
 
         # TODO modify input -> tensor 128x7x17x17
-        #game_state_features = state_to_features(game_state)
-
-
-        #list_game_state = list(game_state)
-        #cated_tensor = torch.cat((list_game_state))
-        #prediction = self.model(game_state).gather(0, action)
-        q_val_taken_actions = torch.index_select(self.policy_model(game_state.to(device='cuda:0')), 1, action.to(device='cuda'))[:, 0]
+        q_val_taken_actions = self.training_model(game_state.to(device='cuda:0')).gather(1, action.to(
+            device='cuda:0').unsqueeze(1))
 
         q_val_next_state = torch.max(self.target_model(next_game_state), dim=1).values.to(device='cuda')
         q_val_next_state_full = torch.zeros(game_state.shape[0]).double().to(device='cuda')
@@ -92,20 +84,10 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
 
         final_state_action_values = (q_val_next_state_full * constants.GAMMA) + reward.to(device='cuda')
 
-
-        #torch.index_select(prediction, 1, action)
-
-        #action_pos = torch.argmax(prediction, dim=1)
-
-        loss = self.criterion(q_val_taken_actions, final_state_action_values)
+        loss = self.criterion(q_val_taken_actions, final_state_action_values.unsqueeze(1))
         self.optimizer.zero_grad()
         loss.backward()
-        for p in self.policy_model.parameters():
-            p.grad.data.clamp_(-1,1)
         self.optimizer.step()
-       # print('weights after backpropagation = ', list(self.model.parameters()))
-
-        # train
 
 
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
@@ -136,7 +118,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
         #constants.EPS = constants.EPS - (1 / constants.EPS_DECAY)
 
     if last_game_state.get('round') % constants.ROUNDS_MODEL_UPDATE == 0:
-        self.target_model.load_state_dict(self.policy_model.state_dict())
+        self.target_model.load_state_dict(self.training_model.state_dict())
         print()
         print('UPDATE TARGET MODEL')
         print()
@@ -148,7 +130,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
     # Store the model
     with open("my-saved-model.pt", "wb") as file:
-        pickle.dump(self.policy_model, file)
+        pickle.dump(self.training_model, file)
 
 
 def reward_from_events(self, events: List[str]) -> int:
@@ -159,24 +141,24 @@ def reward_from_events(self, events: List[str]) -> int:
     certain behavior.
     """
     game_rewards = {
-        e.COIN_COLLECTED: 50,
+        e.COIN_COLLECTED: 0.5,
        # e.KILLED_OPPONENT: 50,
-        e.INVALID_ACTION: -300, # macht es sinn invalide aktionen zu bestrafen?
+        e.INVALID_ACTION: -0.9, # macht es sinn invalide aktionen zu bestrafen?
         #e.COIN_FOUND: 10,
         #e.CRATE_DESTROYED: 20,
-        e.GOT_KILLED: -80,
-        e.KILLED_SELF: -85,
+        e.GOT_KILLED: -0.80,
+        e.KILLED_SELF: -0.85,
         #e.SURVIVED_ROUND: 100,
         #e.OPPONENT_ELIMINATED: 10,  # nicht durch unsern agent direkt gekillt
         #e.BOMB_DROPPED: 0,
         #e.BOMB_EXPLODED: 0,
         #e.SURVIVED_BOMB: 4,
 
-        e.MOVED_UP: 1,
-        e.MOVED_DOWN: 1,
-        e.MOVED_LEFT: 1,
-        e.MOVED_RIGHT: 1,
-        e.WAITED: -10,
+        e.MOVED_UP: -0.001,
+        e.MOVED_DOWN: -0.001,
+        e.MOVED_LEFT: -0.001,
+        e.MOVED_RIGHT: -0.001,
+        e.WAITED: -0.10,
     }
     reward_sum = 0
     for event in events:

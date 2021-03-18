@@ -7,7 +7,7 @@ class Q_Net(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.fc1 = nn.Linear(578, 64)
+        self.fc1 = nn.Linear(27, 64)
         self.fc2 = nn.Linear(64, 64)
         self.fc3 = nn.Linear(64, 6)
 
@@ -15,7 +15,7 @@ class Q_Net(nn.Module):
 
     def forward(self, x):
         x = x.to(device='cuda:0')
-        x = x.reshape(x.shape[0],578)
+        x = x.reshape(x.shape[0],27)
 
         # Takes in a state vector with length state_len and outputs an action vector with length action_len
         x = self.relu(self.fc1(x))
