@@ -5,7 +5,7 @@ import random
 import numpy as np
 import torch
 from torch import nn
-from agent_code.bomb_me_if_you_can_agent.network import Q_Net
+from agent_code.bomb_me_if_you_can_agent.q_conv_network import Q_Net
 import timeit
 from agent_code.bomb_me_if_you_can_agent import constants
 
@@ -27,23 +27,24 @@ def setup(self):
     if self.train or not os.path.isfile("my-saved-model.pt"):
         self.logger.info("Setting up model from scratch.")
 
-        self.model = Q_Net()
-        self.model.cuda(0)
-        self.model.train()
-        self.model.double()
+        self.trainings_model = Q_Net()
+        self.trainings_model.cuda(0)
+        self.trainings_model.train()
+        self.trainings_model.double()
 
-        self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=0.001)
+        self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.0001)
         self.criterion = nn.SmoothL1Loss()
         self.criterion.cuda(0)
 
-
-
+        self.target_model = Q_Net()
+        self.target_model.cuda(0)
+        self.target_model.double()
 
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
         with open("my-saved-model.pt", "rb") as file:
-            self.model = pickle.load(file)
+            self.trainings_model = pickle.load(file)
 
 
 
@@ -61,19 +62,19 @@ def act(self, game_state: dict) -> str:
     print("start")
 
     # todo Exploration vs exploitation
-    random_prob = 0.1
+    random_prob = constants.EPS
     if self.train and random.random() < random_prob:
         self.logger.debug("Choosing action purely at random.")
 
         # 80%: walk in any direction. 10% wait. 10% bomb.
         end = timeit.timeit()
         print(str((end - start)*1000) + " sec RANDOM")
-        action = np.random.choice(constants.ACTIONS, p=[.2, .2, .2, .2, .1, .1])
+        action = np.random.choice(constants.ACTIONS, p=[.2, .2, .2, .2, .2])#, .1])
         print(str(action))
         return action
 
     game_state_features = state_to_features(game_state)
-    prediction = self.model(game_state_features)
+    prediction = self.trainings_model(game_state_features)
     action_pos = torch.argmax(prediction)
 
     end = timeit.timeit()
@@ -102,12 +103,9 @@ def state_to_features(game_state: dict) -> np.array:
     if game_state is None:
         return None
 
-    field_ch = game_state.get('field')
-    field_ch_ten = torch.from_numpy(field_ch).double()
-
     self_coord = game_state.get('self')[3]
     self_ch = np.zeros_like(game_state.get('field'))
-    self_ch[self_coord[0], self_coord[1]] = 1
+    self_ch[self_coord[0], self_coord[1]] = 10
     self_ch_ten = torch.from_numpy(self_ch).double()
 
     others = game_state.get('others')
@@ -144,9 +142,25 @@ def state_to_features(game_state: dict) -> np.array:
     explosion_map_ch = game_state.get('explosion_map')
     explosion_map_ch_ten = torch.from_numpy(explosion_map_ch).double()
 
+    field_ch = game_state.get('field')
+    field_ch[self_coord[0], self_coord[1]] = 1
+
+    field_ch[field_ch == -1] = 255
+    field_ch[field_ch == 0] = 10
+    field_ch[field_ch == 1] = 100
+    #field_ch[coins_ch==1] = 150
+    #field_ch[bombs_ch==1] = 20
+    #field_ch[other_agents_ch==1] = 150
+
+    field_ch = field_ch[self_coord[0] - 1:self_coord[0] + 2, self_coord[1] - 1:self_coord[1] + 2]
+
+    field_ch_ten = torch.from_numpy(field_ch).double()
+
 
     #stacked_channels = torch.stack((self_ch_ten, other0_ch_ten, bombs_ch_ten, coins_ch_ten, explosion_map_ch_ten), 0)
-    stacked_channels = torch.stack((field_ch_ten, self_ch_ten), 0)
+    #stacked_channels = torch.stack((field_ch_ten, self_ch_ten), 0)
+    #stacked_channels = torch.stack((field_ch_ten), 0)
+    stacked_channels = field_ch_ten.unsqueeze(0)
     stacked_channels = stacked_channels.unsqueeze(0)
     #stacked_channels = stacked_channels.unsqueeze(0)
 

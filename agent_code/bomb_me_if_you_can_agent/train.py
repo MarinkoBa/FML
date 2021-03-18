@@ -53,6 +53,10 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
     if ...:
         events.append(PLACEHOLDER_EVENT)
 
+
+    if constants.EPS >= constants.EPS_END:
+        constants.EPS = constants.EPS - (constants.EPS / 10000)
+
     # state_to_features is defined in callbacks.py
     action = self_action
     if(self_action != None):
@@ -61,48 +65,6 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
     transition = Transition(state_to_features(old_game_state), action, state_to_features(next_game_state), reward_from_events(self, events))
     if transition[0] != None:
         self.transitions.append(transition)
-    # TODO check if Batch filled, train
-    if len(self.transitions) >= constants.BATCH_SIZE and self.train:
-        batch = random.sample(self.transitions, constants.BATCH_SIZE)
-        transitions = Transition(*zip(*batch))
-
-
-        next_game_state_none_ind = [i for i, val in enumerate(transitions.next_state) if val == None]
-        next_game_state_filled_ind = [i for i, val in enumerate(transitions.next_state) if val != None]
-        next_game_state_filled_val = [val for i, val in enumerate(transitions.next_state) if val != None]
-
-        game_state = torch.cat(transitions.state)
-        action = torch.tensor(transitions.action)
-        next_game_state = torch.cat(next_game_state_filled_val)
-        reward = torch.tensor(transitions.reward)
-
-
-        # TODO modify input -> tensor 128x7x17x17
-        #game_state_features = state_to_features(game_state)
-
-
-        #list_game_state = list(game_state)
-        #cated_tensor = torch.cat((list_game_state))
-        #prediction = self.model(game_state).gather(0, action)
-        q_val_taken_actions = torch.index_select(self.model(game_state.to(device='cuda:0')), 1, action.to(device='cuda'))[:, 0]
-
-        q_val_next_state = torch.max(self.model(next_game_state), dim=1).values.to(device='cuda')
-        q_val_next_state_full = torch.zeros(game_state.shape[0]).double().to(device='cuda')
-        q_val_next_state_full[next_game_state_filled_ind] = q_val_next_state
-
-        final_state_action_values = (q_val_next_state_full * constants.GAMMA) + reward.to(device='cuda')
-
-
-        #torch.index_select(prediction, 1, action)
-
-        #action_pos = torch.argmax(prediction, dim=1)
-
-        loss = self.criterion(q_val_taken_actions, final_state_action_values)
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-
-        # train
 
 
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
@@ -118,7 +80,6 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     :param self: The same object that is passed to all of your callbacks.
     """
     self.logger.debug(f'Encountered event(s) {", ".join(map(repr, events))} in final step')
-    #self.transitions.append(Transition(state_to_features(last_game_state), last_action, None, reward_from_events(self, events)))
 
     action = last_action
     if(last_action != None):
@@ -128,8 +89,13 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     if transition[0] != None:
         self.transitions.append(transition)
 
-    if constants.EPS >= constants.EPS_END:
-        constants.EPS = constants.EPS - (constants.EPS / 1000)
+    constants.ROUNDS_NR = constants.ROUNDS_NR + 1
+
+    if(constants.ROUNDS_NR%3 == 0):
+        self.target_model.load_state_dict(self.trainings_model.state_dict())
+
+    sample_batch_and_train(self)
+
 
     print()
     print(str(constants.EPS))
@@ -137,8 +103,8 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
 
     # Store the model
-    with open("my-saved-model_2.pt", "wb") as file:
-        pickle.dump(self.model, file)
+    with open("my-saved-model.pt", "wb") as file:
+        pickle.dump(self.trainings_model, file)
 
 
 def reward_from_events(self, events: List[str]) -> int:
@@ -149,18 +115,19 @@ def reward_from_events(self, events: List[str]) -> int:
     certain behavior.
     """
     game_rewards = {
-        #e.COIN_COLLECTED: 1,
+        #e.COIN_COLLECTED: 10,
         #e.KILLED_OPPONENT: 5,
-        e.INVALID_ACTION: -10,
+        e.INVALID_ACTION: -15,
+        #e.WAITED: -5,
         e.WAITED: -5,
-        e.MOVED_UP: 50,
-        e.MOVED_DOWN: 50,
-        e.MOVED_LEFT: 50,
-        e.MOVED_RIGHT: 50,
+        e.MOVED_UP: 5,
+        e.MOVED_DOWN: 5,
+        e.MOVED_LEFT: 5,
+        e.MOVED_RIGHT: 5,
         #e.COIN_FOUND: 0.5,
         #e.CRATE_DESTROYED: 0.5,
-        e.GOT_KILLED: -50,
-        e.KILLED_SELF: -50,
+        #e.GOT_KILLED: -50,
+        #e.KILLED_SELF: 5,
         #e.SURVIVED_ROUND: 10
         #PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
     }
@@ -171,8 +138,34 @@ def reward_from_events(self, events: List[str]) -> int:
     self.logger.info(f"Awarded {reward_sum} for events {', '.join(events)}")
     return reward_sum
 
-def sample_batch(self):
-    return random.sample(self.transitions, constants.BATCH_SIZE)
+def sample_batch_and_train(self):
+
+    if len(self.transitions) >= constants.BATCH_SIZE and self.train:
+        batch = random.sample(self.transitions, constants.BATCH_SIZE)
+        transitions = Transition(*zip(*batch))
+
+        next_game_state_filled_ind = [i for i, val in enumerate(transitions.next_state) if val != None]
+        next_game_state_filled_val = [val for i, val in enumerate(transitions.next_state) if val != None]
+
+        game_state = torch.cat(transitions.state)
+        action = torch.tensor(transitions.action)
+        reward = torch.tensor(transitions.reward)
+        next_game_state = torch.cat(next_game_state_filled_val)
+
+        # TODO modify input -> tensor 128x7x17x17
+        q_val_taken_actions = self.trainings_model(game_state.to(device='cuda:0')).gather(1, action.to(
+            device='cuda:0').unsqueeze(1))
+
+        q_val_next_state = torch.max(self.target_model(next_game_state), dim=1).values.to(device='cuda')
+        q_val_next_state_full = torch.zeros(game_state.shape[0]).double().to(device='cuda')
+        q_val_next_state_full[next_game_state_filled_ind] = q_val_next_state
+
+        final_state_action_values = (q_val_next_state_full * constants.GAMMA) + reward.to(device='cuda')
+
+        loss = self.criterion(q_val_taken_actions, final_state_action_values)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
 
 
 

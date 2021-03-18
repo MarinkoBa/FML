@@ -8,18 +8,16 @@ class Q_Net(nn.Module):
     def __init__(self):
         super(Q_Net, self).__init__()
 
-        self.conv1 = ConvNormRelu(2, 32, kernel_size=3, stride=2)
-        self.conv2 = ConvNormRelu(32, 32, kernel_size=3, stride=2)
-        self.conv3 = ConvNormRelu(32, 32, kernel_size=3, stride=1)
-        self.fc = nn.Linear(32, 6)
+        self.conv1 = ConvNormRelu(1, 16, kernel_size=2, stride=1)
+        self.conv2 = ConvNormRelu(16, 64, kernel_size=2, stride=1)
+        self.fc = nn.Linear(64, 5)
 
     def forward(self, x):
         x = x.to(device='cuda:0')
 
         x = self.conv1(x)
         x = self.conv2(x)
-        x = self.conv3(x)
-        x = self.fc(x.reshape(x.shape[0], 32))
+        x = self.fc(x.reshape(x.shape[0], 64))
 
         return x
 
