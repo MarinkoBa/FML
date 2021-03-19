@@ -6,6 +6,7 @@ from time import sleep, time
 import settings as s
 from environment import BombeRLeWorld, GenericWorld
 from fallbacks import pygame, tqdm, LOADED_PYGAME
+from agent_code.bomb_me_if_you_can_agent import constants
 from replay import ReplayWorld
 
 
@@ -41,7 +42,7 @@ def main(args):
     play_parser.add_argument("--continue-without-training", default=False, action="store_true")
     # play_parser.add_argument("--single-process", default=False, action="store_true")
 
-    play_parser.add_argument("--n-rounds", type=int, default=100000, help="How many rounds to play")
+    play_parser.add_argument("--n-rounds", type=int, default=constants.AMOUNT_OF_TRAINING_EPISODES, help="How many rounds to play")
     play_parser.add_argument("--save-replay", default=False, action="store_true", help="Store the game as .pt for a replay")
     play_parser.add_argument("--no-gui", default=False, action="store_true", help="Deactivate the user interface and play as fast as possible.")
 

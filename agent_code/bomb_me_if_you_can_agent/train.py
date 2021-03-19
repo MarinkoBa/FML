@@ -11,7 +11,8 @@ from .callbacks import state_to_features
 from agent_code.bomb_me_if_you_can_agent import constants
 import matplotlib.pyplot as plt
 import os
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 # This is only an example!
 Transition = namedtuple('Transition',
@@ -33,13 +34,14 @@ def setup_training(self):
     self.transitions = deque(maxlen=constants.TRANSITION_HISTORY_SIZE)
     self.round_events = []
     self.rewards_list = []
+    self.reward_mean = []
 
     # setup plot
 
     plt.title('Q-Net Training')
     plt.xlabel('Episode')
     plt.ylabel('Rewards')
-    plt.ylim([-5,5])
+    plt.ylim([-5, 5])
     plt.ion()
 
 
@@ -126,10 +128,13 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     self.rewards_list.append(reward_from_events(self, self.round_events))
     self.round_events = []
 
-    if last_game_state.get('round') % 1000 == 0:
-        plt.plot(self.rewards_list)
-        plt.savefig('training_plot.png')
+    if last_game_state.get('round') % constants.PLOT_MEAN_OVER_ROUNDS == 0:
+        self.reward_mean.append(np.mean(self.rewards_list[-constants.PLOT_MEAN_OVER_ROUNDS:]))
 
+    if last_game_state.get('round') % constants.EPISODES_TO_PLOT == 0:
+        plt.plot(self.rewards_list)
+        plt.plot(np.arange(0, len(self.reward_mean))* constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean)
+        plt.savefig(constants.NAME_OF_FILES + '_plot.png')
 
     action = last_action
     if (last_action != None):
@@ -137,13 +142,11 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
     transition = Transition(state_to_features(last_game_state), action, None, reward_from_events(self, events))
 
-
     if transition[0] != None:
         self.transitions.append(transition)
 
     if constants.EPS >= constants.EPS_END:
-        constants.EPS = constants.EPS - (constants.EPS / 1000)
-        # constants.EPS = constants.EPS - (1 / constants.EPS_DECAY)
+        constants.EPS = constants.EPS - (constants.EPS / constants.EPS_DECAY)
 
     if last_game_state.get('round') % constants.ROUNDS_MODEL_UPDATE == 0:
         self.target_model.load_state_dict(self.training_model.state_dict())
@@ -156,9 +159,10 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     print()
 
     # Store the model
-    with open("my-saved-model.pt", "wb") as file:
+    with open(constants.NAME_OF_FILES + ".pt", "wb") as file:
         pickle.dump(self.training_model.cpu(), file)
     self.training_model.cuda()
+
 
 def reward_from_events(self, events: List[str]) -> int:
     """
