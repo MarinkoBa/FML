@@ -47,8 +47,8 @@ def setup(self):
     else:
         self.logger.info("Loading model from saved state.")
         with open("my-saved-model.pt", "rb") as file:
-            self.training_model = pickle.load(file)
-
+            self.target_model = pickle.load(file)
+        self.target_model.cuda()
 
 def act(self, game_state: dict) -> str:
     """

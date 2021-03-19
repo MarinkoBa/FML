@@ -39,7 +39,7 @@ def setup_training(self):
     plt.title('Q-Net Training')
     plt.xlabel('Episode')
     plt.ylabel('Rewards')
-
+    plt.ylim([-5,5])
     plt.ion()
 
 
@@ -126,8 +126,9 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     self.rewards_list.append(reward_from_events(self, self.round_events))
     self.round_events = []
 
-    plt.plot(self.rewards_list)
-    plt.savefig('training_plot.png')
+    if last_game_state.get('round') % 1000 == 0:
+        plt.plot(self.rewards_list)
+        plt.savefig('training_plot.png')
 
 
     action = last_action
@@ -157,7 +158,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     # Store the model
     with open("my-saved-model.pt", "wb") as file:
         pickle.dump(self.training_model.cpu(), file)
-
+    self.training_model.cuda()
 
 def reward_from_events(self, events: List[str]) -> int:
     """
