@@ -5,16 +5,34 @@ import scipy.spatial.distance as distance
 
 
 def features_3x3_space(game_state):
-    field = game_state.get('field')
+    field = game_state.get('field').T
     own_pos = game_state.get('self')[3]
 
-    # check if neighboured fields are valid
-    down = field[own_pos[1] + 1, own_pos[0]] == 0
-    up = field[own_pos[1] - 1, own_pos[0]] == 0
-    left = field[own_pos[1], own_pos[0] - 1] == 0
-    right = field[own_pos[1], own_pos[0] + 1] == 0
+    up, down, left, right = True, True, True, True
+    up_steps, down_steps, left_steps, right_steps = 0, 0, 0, 0
+    for i in range(14):
+        if up:
+            if field[own_pos[1] - i, own_pos[0]] == -1 or field[own_pos[1] - i, own_pos[0]] == 1:
+                up = False
+            elif field[own_pos[1] - i, own_pos[0]] == 0:
+                up_steps = up_steps+1
+        if down:
+            if field[own_pos[1] + i, own_pos[0]] == -1 or field[own_pos[1] + i, own_pos[0]] == 1:
+                down = False
+            elif field[own_pos[1] + i, own_pos[0]] == 0:
+                down_steps = down_steps+1
+        if left:
+            if field[own_pos[1], own_pos[0] - i] == -1 or field[own_pos[1], own_pos[0] - i] == 1:
+                left = False
+            elif field[own_pos[1], own_pos[0] - i] == 0:
+                left_steps = left_steps+1
+        if right:
+            if field[own_pos[1], own_pos[0] + i] == -1 or field[own_pos[1], own_pos[0] + i] == 1:
+                right = False
+            elif field[own_pos[1], own_pos[0] + i] == 0:
+                right_steps = right_steps+1
 
-    actions = np.asarray([[0, up, 0], [left, 0, right], [0, down, 0]])
+    actions = np.asarray([[0, up_steps-1, 0], [left_steps-1, 0, right_steps-1], [0, down_steps-1, 0]])
     actions = torch.tensor(actions).double()
 
     coins = game_state.get('coins')
@@ -65,7 +83,7 @@ def features_3x3_space(game_state):
     coins = torch.tensor(coins).double()
 
     # calculate explosion of bombs
-    field = game_state.get('field')
+    field = game_state.get('field').T
     bombs = game_state.get('bombs')
     bomb_field = np.zeros_like(field)
 
@@ -115,7 +133,48 @@ def features_3x3_space(game_state):
 
     bombs = np.asarray([[up_left, up, up_right], [left, middle, right], [down_left, down, down_right]])
     bombs = torch.tensor(bombs).double()
+
+    # Get 3x3 Info About crates
+    field = game_state.get('field').T
+    own_pos = game_state.get('self')[3]
+
+    # check if neighboured fields are valid
+    # count steps
+    up, down, left, right = True, True, True, True
+    up_steps, down_steps, left_steps, right_steps = 0, 0, 0, 0
+    for i in range(14):
+        if up:
+            if field[own_pos[1] - i, own_pos[0]] == -1:
+                up = False
+                up_steps = -1
+            elif field[own_pos[1] - i, own_pos[0]] == 1:
+                up = False
+                up_steps = i
+        if down:
+            if field[own_pos[1] + i, own_pos[0]] == -1:
+                down = False
+                down_steps = -1
+            elif field[own_pos[1] + i, own_pos[0]] == 1:
+                down = False
+                down_steps = i
+        if left:
+            if field[own_pos[1], own_pos[0] - i] == -1:
+                left = False
+                left_steps = -1
+            elif field[own_pos[1], own_pos[0] - i] == 1:
+                left = False
+                left_steps = i
+        if right:
+            if field[own_pos[1], own_pos[0] + i] == -1:
+                right = False
+                right_steps = -1
+            elif field[own_pos[1], own_pos[0] + i] == 1:
+                right = False
+                right_steps = i
+
+    crates = np.asarray([[0, up_steps, 0], [left_steps, 0, right_steps], [0, down_steps, 0]])
+    crates = torch.tensor(crates).double()
     #
     # stacked_channels = torch.stack((self_ch_ten, other0_ch_ten, bombs_ch_ten, coins_ch_ten, explosion_map_ch_ten), 0)
-    stacked_channels = torch.stack((actions, coins, bombs), 0)
+    stacked_channels = torch.stack((actions, coins, bombs, crates), 0)
     return stacked_channels

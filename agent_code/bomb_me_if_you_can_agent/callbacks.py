@@ -10,7 +10,6 @@ import time
 from agent_code.bomb_me_if_you_can_agent import constants
 
 
-
 def setup(self):
     """
     Setup your code. This is called once when loading each agent.
@@ -33,7 +32,7 @@ def setup(self):
         self.training_model.train()
         self.training_model.double()
 
-        self.optimizer = torch.optim.Adam(params=self.training_model.parameters(), lr=0.0001)
+        self.optimizer = torch.optim.Adam(params=self.training_model.parameters(), lr=constants.LEARNING_RATE)
         self.criterion = nn.SmoothL1Loss()
         self.criterion.cuda(0)
 
@@ -49,6 +48,7 @@ def setup(self):
         with open("my-saved-model.pt", "rb") as file:
             self.target_model = pickle.load(file)
         self.target_model.cuda()
+
 
 def act(self, game_state: dict) -> str:
     """
@@ -125,5 +125,7 @@ def valid_actions(game_state):
     right = field[own_pos[1], own_pos[0] + 1] == 0
 
     count = np.sum([up, right, down, left])
+    if count == 0:
+        return [0, 0, 0, 0, 0.5, 0.5]
 
     return [0.8 * up / count, 0.8 * right / count, 0.8 * down / count, 0.8 * left / count, 0.1, 0.1]

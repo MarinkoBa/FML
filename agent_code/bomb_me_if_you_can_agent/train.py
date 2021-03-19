@@ -41,7 +41,7 @@ def setup_training(self):
     plt.title('Q-Net Training')
     plt.xlabel('Episode')
     plt.ylabel('Rewards')
-    plt.ylim([-5, 5])
+    plt.ylim([-constants.SIZE_Y_AXIS, constants.SIZE_Y_AXIS])
     plt.ion()
 
 
@@ -63,13 +63,28 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
     :param events: The events that occurred when going from  `old_game_state` to `new_game_state`
     """
     self.logger.debug(f'Encountered game event(s) {", ".join(map(repr, events))} in step {next_game_state["step"]}')
-    for event in events:
-        self.round_events.append(event)
+
 
     # Idea: Add your own events to hand out rewards
+    if (old_game_state != None and next_game_state != None):
+        old_field = old_game_state.get('field')
+        # field_next = next_game_state.get('field')
+        bombs = next_game_state.get('bombs')
+        for i in range(len(bombs)):
+            if bombs[i][1] == 3:
+                if (old_field[bombs[i][0][1] + 1, bombs[i][0][0]] == 1 or old_field[
+                    bombs[i][0][1] - 1, bombs[i][0][0]] == 1 or
+                    old_field[bombs[i][0][1], bombs[i][0][0] + 1] == 1 or old_field[
+                        bombs[i][0][1], bombs[i][0][0] - 1] == 1) and (
+                        e.BOMB_DROPPED in events) and old_game_state.get('self')[3] == bombs[i][0]:
+                    events.append(e.BOMB_PLACED_AT_CRATE)
     if e.BOMB_EXPLODED in events and e.KILLED_SELF not in events:
         events.append(e.SURVIVED_BOMB)
+    if e.BOMB_DROPPED in events and old_game_state.get('step') == 1:
+        events.append(e.PLACED_BOMB_FIRST_STEP)
 
+    for event in events:
+        self.round_events.append(event)
     # state_to_features is defined in callbacks.py
     action = self_action
     if (self_action != None):
@@ -173,23 +188,24 @@ def reward_from_events(self, events: List[str]) -> int:
     """
     game_rewards = {
         e.COIN_COLLECTED: 0.5,
-        # e.KILLED_OPPONENT: 50,
+        e.KILLED_OPPONENT: 0.6,
         e.INVALID_ACTION: -0.9,  # macht es sinn invalide aktionen zu bestrafen?
-        # e.COIN_FOUND: 10,
-        # e.CRATE_DESTROYED: 20,
+        e.COIN_FOUND: 0.1,
+        e.CRATE_DESTROYED: 0.3,
         e.GOT_KILLED: -0.80,
         e.KILLED_SELF: -0.85,
-        # e.SURVIVED_ROUND: 100,
-        # e.OPPONENT_ELIMINATED: 10,  # nicht durch unsern agent direkt gekillt
-        # e.BOMB_DROPPED: 0,
-        # e.BOMB_EXPLODED: 0,
-        # e.SURVIVED_BOMB: 4,
-
-        e.MOVED_UP: -0.001,
-        e.MOVED_DOWN: -0.001,
-        e.MOVED_LEFT: -0.001,
-        e.MOVED_RIGHT: -0.001,
-        e.WAITED: -0.10,
+        e.SURVIVED_ROUND: 0.8,
+        e.OPPONENT_ELIMINATED: 0.1,  # nicht durch unsern agent direkt gekillt
+        e.BOMB_DROPPED: 0,
+        e.BOMB_EXPLODED: 0,
+        e.SURVIVED_BOMB: 0.01,
+        e.PLACED_BOMB_FIRST_STEP : -0.7, # Bomb in first step, is at all time bad
+        e.MOVED_UP: -0.01,
+        e.MOVED_DOWN: -0.01,
+        e.MOVED_LEFT: -0.01,
+        e.MOVED_RIGHT: -0.01,
+        e.WAITED: -0.02,
+        e.BOMB_PLACED_AT_CRATE: 0.2
     }
     reward_sum = 0
     for event in events:
