@@ -2,7 +2,9 @@ import pickle
 import random
 from collections import namedtuple, deque
 from typing import List
+import numpy as np
 
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 
@@ -30,6 +32,19 @@ def setup_training(self):
     self.transitions = deque(maxlen=constants.TRANSITION_HISTORY_SIZE)
 
 
+    self.round_events = []
+    self.rewards_list = []
+    self.reward_mean = []
+
+    # setup plot
+
+    plt.title('Q-Net Training')
+    plt.xlabel('Episode')
+    plt.ylabel('Rewards')
+    plt.ylim([-500, 500])
+    plt.ion()
+
+
 def game_events_occurred(self, old_game_state: dict, self_action: str, next_game_state: dict, events: List[str]):
     """
     Called once per step to allow intermediate rewards based on game events.
@@ -49,13 +64,16 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
     """
     self.logger.debug(f'Encountered game event(s) {", ".join(map(repr, events))} in step {next_game_state["step"]}')
 
+    for event in events:
+        self.round_events.append(event)
+
     # Idea: Add your own events to hand out rewards
     if ...:
         events.append(PLACEHOLDER_EVENT)
 
 
     if constants.EPS >= constants.EPS_END:
-        constants.EPS = constants.EPS - (constants.EPS / 10000)
+        constants.EPS = constants.EPS - (constants.EPS / 30000)
 
     # state_to_features is defined in callbacks.py
     action = self_action
@@ -81,6 +99,23 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     """
     self.logger.debug(f'Encountered event(s) {", ".join(map(repr, events))} in final step')
 
+    for event in events:
+        self.round_events.append(event)
+
+    self.rewards_list.append(reward_from_events(self, self.round_events))
+    self.round_events = []
+
+    if last_game_state.get('round') % constants.PLOT_MEAN_OVER_ROUNDS == 0:
+        self.reward_mean.append(np.mean(self.rewards_list[-constants.PLOT_MEAN_OVER_ROUNDS:]))
+
+    if last_game_state.get('round') % constants.EPISODES_TO_PLOT == 0:
+        plt.plot(self.rewards_list)
+        plt.plot(np.arange(0, len(self.reward_mean)) * constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean)
+        plt.savefig('my-saved-model_stat_creates_gui_plot.png')
+
+
+
+
     action = last_action
     if(last_action != None):
         action = self.actions.index(last_action)
@@ -91,7 +126,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
     constants.ROUNDS_NR = constants.ROUNDS_NR + 1
 
-    if(constants.ROUNDS_NR%3 == 0):
+    if(constants.ROUNDS_NR%50 == 0):
         self.target_model.load_state_dict(self.trainings_model.state_dict())
 
     sample_batch_and_train(self)
@@ -103,7 +138,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
 
     # Store the model
-    with open("my-saved-model.pt", "wb") as file:
+    with open("my-saved-model_stat_creates_gui.pt", "wb") as file:
         pickle.dump(self.trainings_model, file)
 
 
@@ -115,20 +150,23 @@ def reward_from_events(self, events: List[str]) -> int:
     certain behavior.
     """
     game_rewards = {
-        #e.COIN_COLLECTED: 10,
+        e.COIN_COLLECTED: 50,
         #e.KILLED_OPPONENT: 5,
         e.INVALID_ACTION: -15,
         #e.WAITED: -5,
-        e.WAITED: -5,
-        e.MOVED_UP: 5,
-        e.MOVED_DOWN: 5,
-        e.MOVED_LEFT: 5,
-        e.MOVED_RIGHT: 5,
-        #e.COIN_FOUND: 0.5,
-        #e.CRATE_DESTROYED: 0.5,
+        e.WAITED: -7,
+        e.MOVED_UP: -10,
+        e.MOVED_DOWN: -10,
+        e.MOVED_LEFT: -10,
+        e.MOVED_RIGHT: -10,
+        e.COIN_FOUND: 40,
+        e.CRATE_DESTROYED: 30,
+        e.BOMB_DROPPED: 20,
+        e.BOMB_EXPLODED: 20,
         #e.GOT_KILLED: -50,
-        #e.KILLED_SELF: 5,
+        e.KILLED_SELF: -100,
         #e.SURVIVED_ROUND: 10
+        e.SURVIVED_BOMB: 30
         #PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
     }
     reward_sum = 0
@@ -162,10 +200,17 @@ def sample_batch_and_train(self):
 
         final_state_action_values = (q_val_next_state_full * constants.GAMMA) + reward.to(device='cuda')
 
-        loss = self.criterion(q_val_taken_actions, final_state_action_values)
+        loss = self.criterion(q_val_taken_actions, final_state_action_values.unsqueeze(1))
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        self.scheduler.step()
+
+
+
+
+
+
 
 
 
