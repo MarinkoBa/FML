@@ -31,6 +31,8 @@ def setup_training(self):
     # Example: Setup an array that will note transition tuples
     # (s, a, r, s')
     self.transitions = deque(maxlen=constants.TRANSITION_HISTORY_SIZE)
+    self.penultimate_position = (0,0)
+
     self.round_events = []
     self.rewards_list = []
     self.reward_mean = []
@@ -67,6 +69,7 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
     # Idea: Add your own events to hand out rewards
     # CHECK PLACEMENT OF THE BOMB
     if old_game_state is not None:
+
         old_field = old_game_state.get('field').T
         bombs = next_game_state.get('bombs')
         for i in range(len(bombs)):
@@ -77,6 +80,12 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
                         bombs[i][0][1], bombs[i][0][0] - 1] == 1) and (
                         e.BOMB_DROPPED in events) and old_game_state.get('self')[3] == bombs[i][0]:
                     events.append(e.BOMB_PLACED_AT_CRATE)
+
+
+    if next_game_state.get('step') >= 2:
+        if next_game_state.get('self')[3] == self.penultimate_position and e.BOMB_DROPPED not in events and e.WAITED not in events:
+            events.append(e.RETURN_TO_PREVIOUS_POS)
+        self.penultimate_position = old_game_state.get('self')[3]
 
     if e.BOMB_EXPLODED in events and e.KILLED_SELF not in events:
         events.append(e.SURVIVED_BOMB)
@@ -188,24 +197,25 @@ def reward_from_events(self, events: List[str]) -> int:
     """
     game_rewards = {
         e.COIN_COLLECTED: 0.5,
-        e.KILLED_OPPONENT: 0.6,
+        e.KILLED_OPPONENT: 0.7,
         e.INVALID_ACTION: -0.9,  # macht es sinn invalide aktionen zu bestrafen?
         # e.COIN_FOUND: 0.1,
-        e.CRATE_DESTROYED: 0.05,
+        e.CRATE_DESTROYED: 0.15,
         e.GOT_KILLED: -0.80,
         e.KILLED_SELF: -1,
         e.SURVIVED_ROUND: 0.8,
         e.OPPONENT_ELIMINATED: 0.1,  # nicht durch unsern agent direkt gekillt
         e.BOMB_DROPPED: 0,
         e.BOMB_EXPLODED: 0,
-        e.SURVIVED_BOMB: 0.01,
+        e.SURVIVED_BOMB: 0.1,
         e.PLACED_BOMB_FIRST_STEP : -0.7, # Bomb in first step, is at all time bad
         e.MOVED_UP: -0.05,
         e.MOVED_DOWN: -0.05,
         e.MOVED_LEFT: -0.05,
         e.MOVED_RIGHT: -0.05,
         e.WAITED: -0.1,
-        e.BOMB_PLACED_AT_CRATE: 0.2
+        e.BOMB_PLACED_AT_CRATE: 0.2,
+        e.RETURN_TO_PREVIOUS_POS : -0.05
     }
     reward_sum = 0
     for event in events:
