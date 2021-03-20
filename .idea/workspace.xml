@@ -1,16 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="adjusted orientation feature&#10;and adjusted crates-features with distance to crates">
+    <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="adjust bomb next to crate">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/callbacks.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/constants.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/q_conv_network.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/q_lin_network.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/settings.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -83,7 +75,7 @@
         </ENTRIES>
       </EXTENSION>
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
-      <option name="PARAMETERS" value="play --agents bomb_me_if_you_can_agent" />
+      <option name="PARAMETERS" value="play --agents bomb_me_if_you_can_agent --train 1" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -124,7 +116,14 @@
       <option name="project" value="LOCAL" />
       <updated>1616179907686</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="adjust bomb next to crate">
+      <created>1616241261244</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1616241261244</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -155,9 +154,10 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="added mean_reward plot" />
     <MESSAGE value="adjusted orientation feature&#10;and adjusted crates-features with distance to crates" />
-    <option name="LAST_COMMIT_MESSAGE" value="adjusted orientation feature&#10;and adjusted crates-features with distance to crates" />
+    <MESSAGE value="adjust bomb next to crate" />
+    <option name="LAST_COMMIT_MESSAGE" value="adjust bomb next to crate" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/FML$main.coverage" NAME="main Coverage Results" MODIFIED="1616241105943" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/FML$main.coverage" NAME="main Coverage Results" MODIFIED="1616241686981" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
