@@ -24,7 +24,7 @@ def setup(self):
 
     :param self: This object is passed to all callbacks and you can set arbitrary values.
     """
-    if self.train or not os.path.isfile("my-saved-model.pt"):
+    if self.train or not os.path.isfile("2crate_destr_sch_cor_place_bomb_other_dir_upscal_no_gui_lr0001.pt"):
         self.logger.info("Setting up model from scratch.")
 
         self.trainings_model = Q_Net()
@@ -32,7 +32,7 @@ def setup(self):
         self.trainings_model.train()
         self.trainings_model.double()
 
-        self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.01)
+        self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.001)
         self.criterion = nn.SmoothL1Loss()
         self.criterion.cuda(0)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=100, gamma=0.9)
@@ -44,7 +44,7 @@ def setup(self):
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
-        with open("my-saved-model.pt", "rb") as file:
+        with open("2crate_destr_sch_cor_place_bomb_other_dir_upscal_no_gui_lr0001.pt", "rb") as file:
             self.trainings_model = pickle.load(file)
 
 
@@ -105,6 +105,12 @@ def state_to_features(game_state: dict) -> np.array:
     if game_state is None:
         return None
 
+    # Current features 3->3x3
+    # 1. Field 150 weg, 10 wand, >150 crate, >150coin
+    # 2. Bomb 255 if there is no bomb danger, 3,2,1 if there is danger
+    # 3. Free dir -> slice two upper rows, two bottom rows, two left columns and two right columns in 3x3 and check where is
+    # more place to walk (more ways)
+
     self_coord = game_state.get('self')[3]
     self_ch = np.zeros_like(game_state.get('field'))
     self_ch[self_coord[0], self_coord[1]] = 10
@@ -128,7 +134,7 @@ def state_to_features(game_state: dict) -> np.array:
     other0_ch_ten = torch.from_numpy(other_agents_ch).double()
 
     bombs = game_state.get('bombs')
-    bombs_ch = np.zeros_like(game_state.get('field'))
+    bombs_ch = np.ones_like(game_state.get('field')) * 255
 
     if len(bombs) > 0:
         for bomb in bombs:
@@ -169,11 +175,53 @@ def state_to_features(game_state: dict) -> np.array:
     field_ch[coins_ch==1] = 150
     # field_ch[other_agents_ch==1] = 150
 
+    ii = np.where(field_ch == 220)
+    crate_coords = np.stack((ii[0], ii[1]))
+
+
     field_ch = field_ch[self_coord[1] - 1:self_coord[1] + 2, self_coord[0] - 1:self_coord[0] + 2]
     coins_ch = coins_ch[self_coord[1] - 1:self_coord[1] + 2, self_coord[0] - 1:self_coord[0] + 2]
     bombs_ch = bombs_ch[self_coord[1] - 1:self_coord[1] + 2, self_coord[0] - 1:self_coord[0] + 2]
 
     bombs_ch_ten = torch.from_numpy(bombs_ch).double()
+
+
+
+    min_dist_crate = 1000
+    x_dist_min_crate = 0
+    y_dist_min_crate = 0
+    for crate in range(len(crate_coords[1])):
+        dist = np.sqrt(np.power(self_coord[0] - crate_coords[0][crate], 2) + np.power(self_coord[1] -  crate_coords[1][crate], 2))
+        if (dist < min_dist_crate):
+            min_dist_crate = dist
+            x_dist_min_crate = crate_coords[0][crate] - self_coord[0]
+            y_dist_min_crate = self_coord[1] - crate_coords[1][crate]
+            coin_min = crate
+
+    if (min_dist_crate == 0):
+        min_dist_crate = 1
+    crate_dist = 150 + int((105 / min_dist_crate))
+
+    if (x_dist_min_crate > 0 and y_dist_min_crate > 0):
+        field_ch[0][2] = crate_dist
+    elif (x_dist_min_crate > 0 and y_dist_min_crate == 0):
+        field_ch[1][2] = crate_dist
+    elif (x_dist_min_crate > 0 and y_dist_min_crate < 0):
+        field_ch[2][2] = crate_dist
+
+    elif (x_dist_min_crate == 0 and y_dist_min_crate < 0):
+        field_ch[2][1] = crate_dist
+    elif (x_dist_min_crate == 0 and y_dist_min_crate > 0):
+        field_ch[0][1] = crate_dist
+
+    elif (x_dist_min_crate < 0 and y_dist_min_crate > 0):
+        field_ch[0][0] = crate_dist
+    elif (x_dist_min_crate < 0 and y_dist_min_crate == 0):
+        field_ch[1][0] = crate_dist
+    elif (x_dist_min_crate < 0 and y_dist_min_crate < 0):
+        field_ch[2][0] = crate_dist
+
+    field_ch[field_ch == 220] = crate_dist
 
     min_dist = 1000
     x_dist_min = 0
@@ -210,9 +258,26 @@ def state_to_features(game_state: dict) -> np.array:
     elif (x_dist_min < 0 and y_dist_min < 0):
         field_ch[2][0] = coin_dist
 
+    up = np.count_nonzero(field_ch[0:2][0:2][field_ch[0:2][0:2] >= 150])
+    up = up - np.count_nonzero(field_ch[0:2][0:2][field_ch[0:2][0:2] == 220])
+    down = np.count_nonzero(field_ch[1:3][0:2][field_ch[1:3][0:2] >= 150])
+    down = down - np.count_nonzero(field_ch[1:3][0:2][field_ch[1:3][0:2] == 220])
+    left = np.count_nonzero(field_ch.T[0:2][0:2][field_ch.T[0:2][0:2] >= 150])
+    left = left - np.count_nonzero(field_ch.T[0:2][0:2][field_ch.T[0:2][0:2] == 220])
+    right = np.count_nonzero(field_ch.T[1:3][0:2][field_ch.T[1:3][0:2] >= 150])
+    right = right - np.count_nonzero(field_ch.T[1:3][0:2][field_ch.T[1:3][0:2] == 220])
+
+    free_dir_ch = np.zeros_like(field_ch)
+    free_dir_ch[1][0] = left * 100
+    free_dir_ch[0][1] = up * 100
+    free_dir_ch[1][2] = right * 100
+    free_dir_ch[2][1] = down * 100
+
+    free_dir_ten = torch.from_numpy(free_dir_ch).double()
     field_ch_ten = torch.from_numpy(field_ch).double()
 
-    stacked_channels = torch.stack((field_ch_ten, bombs_ch_ten), 0)
+    stacked_channels = torch.stack((field_ch_ten, bombs_ch_ten, free_dir_ten), 0)
+    #stacked_channels = torch.stack((field_ch_ten, bombs_ch_ten), 0)
     stacked_channels = stacked_channels.unsqueeze(0)
 
     return stacked_channels

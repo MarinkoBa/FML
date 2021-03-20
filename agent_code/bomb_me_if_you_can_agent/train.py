@@ -64,6 +64,107 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
     """
     self.logger.debug(f'Encountered game event(s) {", ".join(map(repr, events))} in step {next_game_state["step"]}')
 
+    if(old_game_state!=None and next_game_state!=None):
+
+        # CHECK PLACEMENT OF THE BOMB
+        old_field = old_game_state.get('field').T
+        #field_next = next_game_state.get('field')
+        bombs = next_game_state.get('bombs')
+        for i in range(len(bombs)):
+            if bombs[i][1] == 3:
+                if (old_field[bombs[i][0][1] + 1, bombs[i][0][0]]==1 or old_field[bombs[i][0][1] - 1, bombs[i][0][0]]==1 or
+                    old_field[bombs[i][0][1], bombs[i][0][0] + 1]==1 or old_field[bombs[i][0][1], bombs[i][0][0] - 1]==1) and (
+                        e.BOMB_DROPPED in events) and old_game_state.get('self')[3]==bombs[i][0]:
+                    events.append(e.BOMB_PLACED_AT_CRATE)
+
+                elif (old_field[bombs[i][0][1] + 1, bombs[i][0][0]]!=1 and old_field[bombs[i][0][1] - 1, bombs[i][0][0]]!=1 and
+                    old_field[bombs[i][0][1], bombs[i][0][0] + 1]!=1 and old_field[bombs[i][0][1], bombs[i][0][0] - 1]!=1) and (
+                        e.BOMB_DROPPED in events) and old_game_state.get('self')[3]==bombs[i][0]:
+                    events.append(e.BOMB_PLACED_BAD)
+
+
+        # CHECK IF MOVED TOWARDS CRATE
+        self_coord = old_game_state.get('self')[3]
+        old_fieldup = old_game_state.get('field').T[self_coord[1] - 1, self_coord[0]]
+        old_fielddown = old_game_state.get('field').T[self_coord[1] + 1, self_coord[0]]
+        old_fieldright = old_game_state.get('field').T[self_coord[1], self_coord[0] + 1]
+        old_fieldleft = old_game_state.get('field').T[self_coord[1], self_coord[0] - 1]
+
+        new_fieldup = 0
+        new_fieldup2 = 0
+        new_fieldup3 = 0
+        new_fieldup4 = 0
+        new_fielddown = 0
+        new_fielddown2 = 0
+        new_fielddown3 = 0
+        new_fielddown4 = 0
+        new_fieldright = 0
+        new_fieldright2 = 0
+        new_fieldright3 = 0
+        new_fieldright4 = 0
+        new_fieldleft = 0
+        new_fieldleft2 = 0
+        new_fieldleft3 = 0
+        new_fieldleft4 = 0
+        if(e.MOVED_LEFT in events):
+            new_fieldup = next_game_state.get('field').T[self_coord[1] - 1, self_coord[0]-1]
+            new_fielddown = next_game_state.get('field').T[self_coord[1] + 1, self_coord[0]-1]
+            new_fieldright = next_game_state.get('field').T[self_coord[1], self_coord[0] + 1 - 1]
+            new_fieldleft = next_game_state.get('field').T[self_coord[1], self_coord[0] - 1 - 1]
+
+            if(self_coord[0] - 1) > 5:
+                new_fieldleft2 = next_game_state.get('field').T[self_coord[1], self_coord[0] - 1 - 1 - 1]
+                new_fieldleft3 = next_game_state.get('field').T[self_coord[1], self_coord[0] - 1 - 1 - 1 -1]
+                new_fieldleft4 = next_game_state.get('field').T[self_coord[1], self_coord[0] - 1 - 1 - 1 -1 -1]
+
+        if(e.MOVED_RIGHT in events):
+            new_fieldup = next_game_state.get('field').T[self_coord[1] - 1, self_coord[0]+1]
+            new_fielddown = next_game_state.get('field').T[self_coord[1] + 1, self_coord[0]+1]
+            new_fieldright = next_game_state.get('field').T[self_coord[1], self_coord[0] + 1 + 1]
+            new_fieldleft = next_game_state.get('field').T[self_coord[1], self_coord[0] - 1 + 1]
+
+            if(self_coord[0] + 1) < 10:
+                new_fieldright2 = next_game_state.get('field').T[self_coord[1], self_coord[0] + 1 + 1 +1]
+                new_fieldright3 = next_game_state.get('field').T[self_coord[1], self_coord[0] + 1 + 1 +1 +1]
+                new_fieldright4 = next_game_state.get('field').T[self_coord[1], self_coord[0] + 1 + 1 +1 +1 +1]
+
+
+        if(e.MOVED_UP in events):
+            new_fieldup = next_game_state.get('field').T[self_coord[1] - 1 - 1 , self_coord[0]]
+            new_fielddown = next_game_state.get('field').T[self_coord[1] + 1 -1, self_coord[0]]
+            new_fieldright = next_game_state.get('field').T[self_coord[1] -1, self_coord[0] + 1]
+            new_fieldleft = next_game_state.get('field').T[self_coord[1] -1, self_coord[0] - 1]
+
+            if(self_coord[1] - 1) > 5:
+                new_fieldup2 = next_game_state.get('field').T[self_coord[1] - 1 - 1 -1, self_coord[0]]
+                new_fieldup3 = next_game_state.get('field').T[self_coord[1] - 1 - 1 -1 -1, self_coord[0]]
+                new_fieldup4 = next_game_state.get('field').T[self_coord[1] - 1 - 1 -1 -1 -1, self_coord[0]]
+
+        if(e.MOVED_DOWN in events):
+            new_fieldup = next_game_state.get('field').T[self_coord[1] - 1 + 1 , self_coord[0]]
+            new_fielddown = next_game_state.get('field').T[self_coord[1] + 1 +1, self_coord[0]]
+            new_fieldright = next_game_state.get('field').T[self_coord[1] +1, self_coord[0] + 1]
+            new_fieldleft = next_game_state.get('field').T[self_coord[1] +1, self_coord[0] - 1]
+
+            if(self_coord[1] + 1) < 10:
+                new_fielddown2 = next_game_state.get('field').T[self_coord[1] + 1 +1 +1, self_coord[0]]
+                new_fielddown3 = next_game_state.get('field').T[self_coord[1] + 1 +1 +1 +1, self_coord[0]]
+                new_fielddown4 = next_game_state.get('field').T[self_coord[1] + 1 +1 +1 +1 +1, self_coord[0]]
+
+        if(e.MOVED_DOWN in events) or (e.MOVED_UP in events) or (e.MOVED_LEFT in events) or (e.MOVED_RIGHT in events):
+            if (old_fieldup != 1 and old_fielddown != 1 and old_fieldleft != 1 and old_fieldright != 1) and \
+                    (new_fieldup == 1 or new_fieldup2 == 1 or new_fieldup3 == 1  or new_fieldup4 == 1
+                     or new_fielddown == 1 or new_fielddown2 == 1 or new_fielddown3 == 1 or new_fielddown4 == 1
+                     or new_fieldleft == 1 or new_fieldleft2 == 1 or new_fieldleft3 == 1 or new_fieldleft4 == 1
+                    or new_fieldright == 1 or new_fieldright2 == 1 or new_fieldright3 == 1 or new_fieldright4 == 1):
+                events.append(e.MOVED_TOWARDS_CRATE)
+
+            if (new_fieldup != 1 and new_fieldup2 != 1 and new_fieldup3 != 1 and new_fieldup4 != 1
+                     and new_fielddown != 1 and new_fielddown2 != 1 and new_fielddown3 != 1 and new_fielddown4 != 1
+                     and new_fieldleft != 1 and new_fieldleft2 != 1 and new_fieldleft3 != 1 and new_fieldleft4 != 1
+                    and new_fieldright != 1 and new_fieldright2 != 1 and new_fieldright3 != 1 and new_fieldright3 != 4):
+                events.append(e.MOVED_AWAY_FROM_CRATE)
+
     for event in events:
         self.round_events.append(event)
 
@@ -73,7 +174,7 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
 
 
     if constants.EPS >= constants.EPS_END:
-        constants.EPS = constants.EPS - (constants.EPS / 30000)
+        constants.EPS = constants.EPS - (constants.EPS / 10000)
 
     # state_to_features is defined in callbacks.py
     action = self_action
@@ -111,10 +212,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     if last_game_state.get('round') % constants.EPISODES_TO_PLOT == 0:
         plt.plot(self.rewards_list)
         plt.plot(np.arange(0, len(self.reward_mean)) * constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean)
-        plt.savefig('my-saved-model_stat_creates_gui_plot.png')
-
-
-
+        plt.savefig('2crate_destr_sch_cor_place_bomb_other_dir_upscal_no_gui_lr0001.png')
 
     action = last_action
     if(last_action != None):
@@ -138,7 +236,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
 
     # Store the model
-    with open("my-saved-model_stat_creates_gui.pt", "wb") as file:
+    with open("2crate_destr_sch_cor_place_bomb_other_dir_upscal_no_gui_lr0001.pt", "wb") as file:
         pickle.dump(self.trainings_model, file)
 
 
@@ -150,23 +248,27 @@ def reward_from_events(self, events: List[str]) -> int:
     certain behavior.
     """
     game_rewards = {
-        e.COIN_COLLECTED: 50,
+        e.COIN_COLLECTED: 100,
         #e.KILLED_OPPONENT: 5,
         e.INVALID_ACTION: -15,
         #e.WAITED: -5,
-        e.WAITED: -7,
-        e.MOVED_UP: -10,
-        e.MOVED_DOWN: -10,
-        e.MOVED_LEFT: -10,
-        e.MOVED_RIGHT: -10,
-        e.COIN_FOUND: 40,
-        e.CRATE_DESTROYED: 30,
-        e.BOMB_DROPPED: 20,
-        e.BOMB_EXPLODED: 20,
+        e.WAITED: -15,
+        e.MOVED_UP: -15,
+        e.MOVED_DOWN: -15,
+        e.MOVED_LEFT: -15,
+        e.MOVED_RIGHT: -15,
+        e.COIN_FOUND: 120,
+        e.CRATE_DESTROYED: 25,
+        #e.BOMB_DROPPED: 10,
+        e.BOMB_PLACED_AT_CRATE: 65,
+        e.BOMB_PLACED_BAD: -40,
+        #e.BOMB_EXPLODED: 10,
         #e.GOT_KILLED: -50,
-        e.KILLED_SELF: -100,
+        e.KILLED_SELF: -200,
         #e.SURVIVED_ROUND: 10
-        e.SURVIVED_BOMB: 30
+        e.SURVIVED_BOMB: 25,
+        e.MOVED_TOWARDS_CRATE: 35,
+        #e.MOVED_AWAY_FROM_CRATE: -15
         #PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
     }
     reward_sum = 0
