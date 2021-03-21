@@ -146,28 +146,28 @@ def features_3x3_space(game_state):
         if up:
             if field[own_pos[1] - i, own_pos[0]] == -1:
                 up = False
-                up_steps = -1
+                #up_steps = -1
             elif field[own_pos[1] - i, own_pos[0]] == 1:
                 up = False
                 up_steps = i
         if down:
             if field[own_pos[1] + i, own_pos[0]] == -1:
                 down = False
-                down_steps = -1
+                #down_steps = -1
             elif field[own_pos[1] + i, own_pos[0]] == 1:
                 down = False
                 down_steps = i
         if left:
             if field[own_pos[1], own_pos[0] - i] == -1:
                 left = False
-                left_steps = -1
+                #left_steps = -1
             elif field[own_pos[1], own_pos[0] - i] == 1:
                 left = False
                 left_steps = i
         if right:
             if field[own_pos[1], own_pos[0] + i] == -1:
                 right = False
-                right_steps = -1
+                #right_steps = -1
             elif field[own_pos[1], own_pos[0] + i] == 1:
                 right = False
                 right_steps = i
