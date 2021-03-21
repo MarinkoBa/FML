@@ -207,7 +207,7 @@ def reward_from_events(self, events: List[str]) -> int:
         e.OPPONENT_ELIMINATED: 0.1,  # nicht durch unsern agent direkt gekillt
         e.BOMB_DROPPED: 0,
         e.BOMB_EXPLODED: 0,
-        e.SURVIVED_BOMB: 0.1,
+        #e.SURVIVED_BOMB: 0.1,
         e.PLACED_BOMB_FIRST_STEP: -0.7, # Bomb in first step, is at all time bad
         e.MOVED_UP: -0.08,
         e.MOVED_DOWN: -0.08,
@@ -215,7 +215,7 @@ def reward_from_events(self, events: List[str]) -> int:
         e.MOVED_RIGHT: -0.08,
         e.WAITED: -0.4,
         e.BOMB_PLACED_AT_CRATE: 0.2,
-        e.RETURN_TO_PREVIOUS_POS: -0.4
+        #e.RETURN_TO_PREVIOUS_POS: -0.4
     }
     reward_sum = 0
     for event in events:

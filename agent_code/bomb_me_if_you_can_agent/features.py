@@ -173,7 +173,12 @@ def features_3x3_space(game_state):
                 right_steps = i
 
     crates = np.asarray([[0, up_steps, 0], [left_steps, 0, right_steps], [0, down_steps, 0]])
-    crates = torch.tensor(crates).double()
+    mask = crates == 0
+    crates[mask] = 100
+    nearest_crate_index = np.unravel_index(crates.argmin(), crates.shape)
+    nearest_crates = np.zeros_like(crates)
+    nearest_crates[nearest_crate_index[0],nearest_crate_index[1]] = crates[nearest_crate_index[0],nearest_crate_index[1]]
+    crates = torch.tensor(nearest_crates).double()
     #
     # stacked_channels = torch.stack((self_ch_ten, other0_ch_ten, bombs_ch_ten, coins_ch_ten, explosion_map_ch_ten), 0)
     stacked_channels = torch.stack((actions, coins, bombs, crates), 0)
