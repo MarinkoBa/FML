@@ -183,3 +183,85 @@ def features_3x3_space(game_state):
     # stacked_channels = torch.stack((self_ch_ten, other0_ch_ten, bombs_ch_ten, coins_ch_ten, explosion_map_ch_ten), 0)
     stacked_channels = torch.stack((actions, coins, bombs, crates), 0)
     return stacked_channels
+
+def feature_field(game_state):
+    field = game_state.get('field').T
+
+    self_coord = game_state.get('self')[3]
+    self = np.zeros_like(field)
+    self[self_coord[1], self_coord[0]] = 1
+
+    others = game_state.get('others')
+    other_field = np.zeros_like(field)
+    if len(others) > 0:
+        other_coord = others[0][3]
+        other_field[other_coord[1], other_coord[0]] = 1
+
+        if len(others) > 1:
+            other_coord = others[1][3]
+            other_field[other_coord[1], other_coord[0]] = 1
+        if len(others) > 2:
+            other_coord = others[2][3]
+            other_field[other_coord[1], other_coord[0]] = 1
+
+    bombs = game_state.get('bombs')
+    bomb_field = np.zeros_like(field)
+    if len(bombs) > 0:
+        for bomb in bombs:
+            bomb_field[bomb[1], bomb[0]] = 1
+
+
+
+    coins_coord = game_state.get('coins')
+    coins = np.zeros_like(field)
+    if len(coins_coord) > 0:
+        for coin in coins_coord:
+            coins[coin[1], coin[0]] = distance.cityblock([self_coord[1], self_coord[0]], [coin[1], coin[0]])
+
+    # calculate explosion of bombs
+    bombs = game_state.get('bombs')
+    bomb_field = np.zeros_like(field)
+
+    # calculate field with all bomb and expected explosions
+    up, down, left, right = True, True, True, True
+    if len(bombs) > 0:
+        for bomb in bombs:
+            bomb_timer = bomb[1]
+            bomb_field[bomb[0][1], bomb[0][0]] = bomb_timer
+
+            for i in range(settings.BOMB_POWER + 1):
+                if up:
+                    if field[bomb[0][1] + i, bomb[0][0]] == -1 or field[bomb[0][1] + i, bomb[0][0]] == 1:
+                        up = False
+                if down:
+                    if field[bomb[0][1] - i, bomb[0][0]] == -1 or field[bomb[0][1] - i, bomb[0][0]] == 1:
+                        down = False
+                if right:
+                    if field[bomb[0][1], bomb[0][0] + i] == -1 or field[bomb[0][1], bomb[0][0] + i] == 1:
+                        right = False
+                if left:
+                    if field[bomb[0][1], bomb[0][0] - i] == -1 or field[bomb[0][1], bomb[0][0] - i] == 1:
+                        left = False
+
+                if up:
+                    bomb_field[bomb[0][1] + i, bomb[0][0]] = bomb_timer
+                if down:
+                    bomb_field[bomb[0][1] - i, bomb[0][0]] = bomb_timer
+                if right:
+                    bomb_field[bomb[0][1], bomb[0][0] + i] = bomb_timer
+                if left:
+                    bomb_field[bomb[0][1], bomb[0][0] - i] = bomb_timer
+
+    field = torch.tensor(field).double()
+    self = torch.tensor(self).double()
+    others = torch.tensor(other_field).double()
+    bombs = torch.tensor(bomb_field).double()
+    coins = torch.tensor(coins).double()
+
+    field = torch.tensor(field).double()
+    tensor_ch = torch.stack(
+        (field, self, others, bombs, coins), 0)
+
+    tensor_ch = tensor_ch.unsqueeze(0)
+
+    return tensor_ch
