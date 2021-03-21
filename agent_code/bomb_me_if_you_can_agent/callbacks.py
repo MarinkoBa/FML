@@ -106,9 +106,9 @@ def state_to_features(game_state: dict) -> np.array:
     if game_state is None:
         return None
 
-    #stacked_channels = features.features_3x3_space(game_state)
-    #stacked_channels = stacked_channels.unsqueeze(0)
-    stacked_channels = features.feature_field(game_state)
+    stacked_channels = features.features_3x3_space(game_state)
+    stacked_channels = stacked_channels.unsqueeze(0)
+    #stacked_channels = features.feature_field(game_state)
 
     # and return them as a vector
     return stacked_channels
