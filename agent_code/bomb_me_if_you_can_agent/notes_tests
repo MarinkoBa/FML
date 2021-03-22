@@ -1,0 +1,27 @@
+4.
+-> no free dir feature, only in 3x3 matrix -> look after 6left positions
+(first two columns) -> value of left, look after 6 right positions (second
+and third column for right), after first two rows for up, second two rows for down
+
+
+5:
+ -> 3x3x3 features:
+    1.) field (10wall, 150way, 100selfcoord,
+    nearest coin: >=150 -> the smaller the distance, the bigger value
+    between 150 and 255. The same with crates.
+    2.) bomb -> 255where not a bomb danger, 3,2,1, where bomb danger
+    3.) free direction: look after nearest moves (up, down, left, right) and
+    after their neighbors (again up down left right) sum up for every possible move
+    the available ways and present in a feature x100. The rest is 10.
+ -> steps, alle 5k episodes, 20steps more allowed (start at 20steps, after
+ 5k episodes -> 40 steps, after 10k episodes 60steps...at 100k episodes 400steps
+
+6.
+ same as 5, difference: all 10k episodes, 10more steps (start at 20 steps,
+ after 10k -> 30steps, after 20k 40steps...400k episodes training in a sum
+
+7.
+ difference in the bomb feature: the position of the bomb encoded in the
+ free direction feature. If bomb there, you cannot go this direction.
+ difference in a field feature: if bomb there, the value set to 3,2,1 (the way
+ is 10, so even worse -> zero)
