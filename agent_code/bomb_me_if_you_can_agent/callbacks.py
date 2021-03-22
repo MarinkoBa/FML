@@ -45,8 +45,12 @@ def setup(self):
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
-        with open("5crate_destr_cor_place_bomb_2step_where_upscal_no_gui_lr0001.pt", "rb") as file:
+        with open("7crate_destr_cor_place_bomb_2step_bomb_where_upscal_no_gui_lr0001_10steps.pt", "rb") as file:
             self.trainings_model = pickle.load(file)
+
+
+
+
 
 
 def act(self, game_state: dict) -> str:
@@ -112,11 +116,13 @@ def state_to_features(game_state: dict) -> np.array:
     # 3. Free dir -> slice two upper rows, two bottom rows, two left columns and two right columns in 3x3 and check where is
     # more place to walk (more ways)
 
+    # self coordinates
     self_coord = game_state.get('self')[3]
     self_ch = np.zeros_like(game_state.get('field'))
     self_ch[self_coord[0], self_coord[1]] = 10
-    self_ch_ten = torch.from_numpy(self_ch).double()
+    ########
 
+    # OTHER AGENTS
     others = game_state.get('others')
     other_agents_ch = np.zeros_like(game_state.get('field'))
 
@@ -133,6 +139,7 @@ def state_to_features(game_state: dict) -> np.array:
         other_agents_ch[other2_coord[0], other2_coord[1]] = 1
 
     other0_ch_ten = torch.from_numpy(other_agents_ch).double()
+    #######
 
     bombs = game_state.get('bombs')
     bombs_ch = np.ones_like(game_state.get('field')) * 255
@@ -155,75 +162,30 @@ def state_to_features(game_state: dict) -> np.array:
                 if (y_coords_bomb[i] <= 15 and y_coords_bomb[i] >= 1):
                     bombs_ch[y_coords_bomb[i], x_coor] = bomb[1]
 
-    #bombs_ch_ten = torch.from_numpy(bombs_ch).double()
 
     coins = game_state.get('coins')
     coins_ch = np.zeros_like(game_state.get('field'))
     if len(coins) > 0:
         for coin in coins:
             coins_ch[coin[0], coin[1]] = 1
-    coins_ch_ten = torch.from_numpy(coins_ch).double()
 
-    explosion_map_ch = game_state.get('explosion_map')
-    explosion_map_ch_ten = torch.from_numpy(explosion_map_ch).double()
 
     field_ch = game_state.get('field').transpose()
 
     for bomb in bombs:
         field_ch[bomb[0][1], bomb[0][0]] = 2
 
-    #recursive_neighborhood(self_coord, field_ch)
-
+    # BUILD FREE DIR 3 STEP
     res = find_3neighbor_values(self_coord, field_ch)
-
     free_dir = np.ones((3,3))*10
     free_dir[0][1] = res[0]
     free_dir[2][1] = res[1]
     free_dir[1][0] = res[2]
     free_dir[1][2] = res[3]
+    #########
 
-
-    #
-    # free_dir = np.zeros((3,3))
-    # cnt_free_steps = 0
-    # up = (self_coord[0], self_coord[1] - 1)
-    # down = (self_coord[0], self_coord[1] + 1)
-    # left = (self_coord[0] - 1, self_coord[1])
-    # right = (self_coord[0] + 1, self_coord[1])
-    # step_arr = [up, down, left, right]
-    # for ind, st in enumerate(step_arr):
-    #     cnt_free_steps = 0
-    #     up2 = st[0], st[1] - 1
-    #     down2 = st[0], st[1] + 1
-    #     left2 = st[0] - 1, st[1]
-    #     right2 = st[0] + 1, st[1]
-    #     if (field_ch[st[1],st[0]] == 0):
-    #         cnt_free_steps += 1
-    #         if (ind != 1 and up2[0] >= 1 and up2[0] <= 15 and up2[1] >= 1 and up2[1] <= 15):
-    #             if (field_ch[up2[1],up2[0]] == 0):
-    #                 cnt_free_steps += 1
-    #         if (ind != 0 and down2[0] >= 1 and down2[0] <= 15 and down2[1] >= 1 and down2[1] <= 15):
-    #             if (field_ch[down2[1],down2[0]] == 0):
-    #                 cnt_free_steps += 1
-    #         if (ind != 3 and left2[0] >= 1 and left2[0] <= 15 and left2[1] >= 1 and left2[1] <= 15):
-    #             if (field_ch[left2[1],left2[0]] == 0):
-    #                 cnt_free_steps += 1
-    #         if (ind != 2 and right2[0] >= 1 and right2[0] <= 15 and right2[1] >= 1 and right2[1] <= 15):
-    #             if (field_ch[right2[1],right2[0]] == 0):
-    #                 cnt_free_steps += 1
-    #     if(ind==0):
-    #         free_dir[0][1]=cnt_free_steps * 100
-    #     elif (ind == 1):
-    #         free_dir[2][1] = cnt_free_steps * 100
-    #     elif (ind == 2):
-    #         free_dir[1][0] = cnt_free_steps * 100
-    #     elif (ind == 3):
-    #         free_dir[1][2] = cnt_free_steps * 100
-    #
-    # free_dir[free_dir==0] = 10
 
     field_ch[self_coord[1], self_coord[0]] = 100
-
     field_ch[field_ch == -1] = 10
     field_ch[field_ch == 0] = 150
     field_ch[field_ch == 1] = 220
@@ -241,10 +203,9 @@ def state_to_features(game_state: dict) -> np.array:
     coins_ch = coins_ch[self_coord[1] - 1:self_coord[1] + 2, self_coord[0] - 1:self_coord[0] + 2]
     bombs_ch = bombs_ch[self_coord[1] - 1:self_coord[1] + 2, self_coord[0] - 1:self_coord[0] + 2]
 
-    bombs_ch_ten = torch.from_numpy(bombs_ch).double()
 
 
-
+    # SEARCH FOR NEXT CRATE
     min_dist_crate = 1000
     x_dist_min_crate = 0
     y_dist_min_crate = 0
@@ -280,7 +241,10 @@ def state_to_features(game_state: dict) -> np.array:
         field_ch[2][0] = crate_dist
 
     field_ch[field_ch == 220] = crate_dist
+    ########
 
+
+    # SEARCH FOR NEXT COIN
     min_dist = 1000
     x_dist_min = 0
     y_dist_min = 0
@@ -313,9 +277,11 @@ def state_to_features(game_state: dict) -> np.array:
         field_ch[1][0] = coin_dist
     elif (x_dist_min < 0 and y_dist_min < 0):
         field_ch[2][0] = coin_dist
+    #######
 
-    free_dir_ten = torch.from_numpy(free_dir).double()
     field_ch_ten = torch.from_numpy(field_ch).double()
+    bombs_ch_ten = torch.from_numpy(bombs_ch).double()
+    free_dir_ten = torch.from_numpy(free_dir).double()
 
     stacked_channels = torch.stack((field_ch_ten, bombs_ch_ten, free_dir_ten), 0)
     stacked_channels = stacked_channels.unsqueeze(0)
@@ -535,16 +501,70 @@ def find_3neighbor_values(self_coord, field_ch):
     duplicates_right_list = [idx for idx, val in enumerate(right_list_coord) if val in right_list_coord[:idx]]
 
     for i in range(len(duplicates_up_list)):
-        up_list[duplicates_up_list[i]] = 1
+
+        duplicate_tuple = up_list_coord[duplicates_up_list[i]]
+        ind_to_check = [i for i, tupl in enumerate(up_list_coord) if tupl == duplicate_tuple]
+        if(up_list[ind_to_check[0]] == 1 and up_list[ind_to_check[1]] == 1):
+            up_list[ind_to_check[1]] = 1
+        if(up_list[ind_to_check[0]] == 5 and up_list[ind_to_check[1]] == 1):
+            up_list[ind_to_check[1]] = 1
+        if (up_list[ind_to_check[1]] == 5 and up_list[ind_to_check[0]] == 1):
+            up_list[ind_to_check[0]] = 1
+        if (up_list[ind_to_check[1]] == 5 and up_list[ind_to_check[0]] == 5):
+            up_list[ind_to_check[1]] = 1
+
 
     for j in range(len(duplicates_down_list)):
-        down_list[duplicates_down_list[j]] = 1
+
+        duplicate_tuple = down_list_coord[duplicates_down_list[j]]
+        ind_to_check = [i for i, tupl in enumerate(down_list_coord) if tupl == duplicate_tuple]
+
+        if (down_list[ind_to_check[0]] == 1 and down_list[ind_to_check[1]] == 1):
+            down_list[ind_to_check[1]] = 1
+        if (down_list[ind_to_check[0]] == 5 and down_list[ind_to_check[1]] == 1):
+            down_list[ind_to_check[1]] = 1
+        if (down_list[ind_to_check[1]] == 5 and down_list[ind_to_check[0]] == 1):
+            down_list[ind_to_check[0]] = 1
+        if (down_list[ind_to_check[1]] == 5 and down_list[ind_to_check[0]] == 5):
+            down_list[ind_to_check[1]] = 1
+
+        #down_list[duplicates_down_list[j]] = 1
 
     for k in range(len(duplicates_left_list)):
-        left_list[duplicates_left_list[k]] = 1
+        #ind_to_check = left_list_coord[left_list_coord == duplicates_up_list[k]]
+
+        duplicate_tuple = left_list_coord[duplicates_left_list[k]]
+        ind_to_check = [i for i, tupl in enumerate(left_list_coord) if tupl == duplicate_tuple]
+
+        if  (left_list[ind_to_check[0]] == 1 and left_list[ind_to_check[1]] == 1):
+            left_list[ind_to_check[1]] = 1
+        if (left_list[ind_to_check[0]] == 5 and left_list[ind_to_check[1]] == 1):
+            left_list[ind_to_check[1]] = 1
+        if (left_list[ind_to_check[1]] == 5 and left_list[ind_to_check[0]] == 1):
+            left_list[ind_to_check[0]] = 1
+        if (left_list[ind_to_check[1]] == 5 and left_list[ind_to_check[0]] == 5):
+            left_list[ind_to_check[1]] = 1
+
+
+        #left_list[duplicates_left_list[k]] = 1
 
     for l in range(len(duplicates_right_list)):
-        right_list[duplicates_right_list[l]] = 1
+        #ind_to_check = right_list_coord[right_list_coord == duplicates_right_list[l]]
+
+        duplicate_tuple = right_list_coord[duplicates_right_list[l]]
+        ind_to_check = [i for i, tupl in enumerate(right_list_coord) if tupl == duplicate_tuple]
+
+        if (right_list[ind_to_check[0]] == 1 and right_list[ind_to_check[1]] == 1):
+            right_list[ind_to_check[1]] = 1
+        if (right_list[ind_to_check[0]] == 5 and right_list[ind_to_check[1]] == 1):
+            right_list[ind_to_check[1]] = 1
+        if (right_list[ind_to_check[1]] == 5 and right_list[ind_to_check[0]] == 1):
+            right_list[ind_to_check[0]] = 1
+        if (right_list[ind_to_check[1]] == 5 and right_list[ind_to_check[0]] == 5):
+            right_list[ind_to_check[1]] = 1
+
+
+        #right_list[duplicates_right_list[l]] = 1
 
 
     list_of_lists_coord = [up_list_coord, down_list_coord, left_list_coord, right_list_coord]

@@ -43,7 +43,7 @@ def setup_training(self):
     plt.title('Q-Net Training')
     plt.xlabel('Episode')
     plt.ylabel('Rewards')
-    plt.ylim([-500, 500])
+    plt.ylim([-1000, 1000])
     plt.ion()
 
 
