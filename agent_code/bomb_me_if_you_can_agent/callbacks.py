@@ -26,26 +26,36 @@ def setup(self):
 
     :param self: This object is passed to all callbacks and you can set arbitrary values.
     """
-    if self.train or not os.path.isfile("2crate_destr_sch_cor_place_bomb_other_dir_upscal_no_gui_lr0001.pt"):
+    if self.train or not os.path.isfile("99crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt"):
         self.logger.info("Setting up model from scratch.")
 
-        self.trainings_model = Q_Net()
-        self.trainings_model.cuda(0)
-        self.trainings_model.train()
-        self.trainings_model.double()
+        #self.trainings_model = Q_Net()
+        #self.trainings_model.cuda(0)
+        #self.trainings_model.train()
+        #self.trainings_model.double()
+
+        #self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.0001)
+        #self.criterion = nn.SmoothL1Loss()
+        #self.criterion.cuda(0)
+
+        #self.target_model = Q_Net()
+        #self.target_model.cuda(0)
+        #self.target_model.double()
+
+        with open("99crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt", "rb") as file:
+            self.trainings_model = pickle.load(file)
+
+        with open("99crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt", "rb") as file:
+            self.target_model = pickle.load(file)
 
         self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.0001)
         self.criterion = nn.SmoothL1Loss()
         self.criterion.cuda(0)
 
-        self.target_model = Q_Net()
-        self.target_model.cuda(0)
-        self.target_model.double()
-
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
-        with open("7crate_destr_cor_place_bomb_2step_bomb_where_upscal_no_gui_lr0001_10steps.pt", "rb") as file:
+        with open("99crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt", "rb") as file:
             self.trainings_model = pickle.load(file)
 
 
@@ -122,25 +132,6 @@ def state_to_features(game_state: dict) -> np.array:
     self_ch[self_coord[0], self_coord[1]] = 10
     ########
 
-    # OTHER AGENTS
-    others = game_state.get('others')
-    other_agents_ch = np.zeros_like(game_state.get('field'))
-
-    if len(others) >= 1:
-        other0_coord = others[0][3]
-        other_agents_ch[other0_coord[0], other0_coord[1]] = 1
-
-    if len(others) >= 2:
-        other1_coord = others[1][3]
-        other_agents_ch[other1_coord[0], other1_coord[1]] = 1
-
-    if len(others) >= 3:
-        other2_coord = others[2][3]
-        other_agents_ch[other2_coord[0], other2_coord[1]] = 1
-
-    other0_ch_ten = torch.from_numpy(other_agents_ch).double()
-    #######
-
     bombs = game_state.get('bombs')
     bombs_ch = np.ones_like(game_state.get('field')) * 255
 
@@ -204,46 +195,6 @@ def state_to_features(game_state: dict) -> np.array:
     bombs_ch = bombs_ch[self_coord[1] - 1:self_coord[1] + 2, self_coord[0] - 1:self_coord[0] + 2]
 
 
-
-    # SEARCH FOR NEXT CRATE
-    min_dist_crate = 1000
-    x_dist_min_crate = 0
-    y_dist_min_crate = 0
-    for crate in range(len(crate_coords[1])):
-        dist = np.sqrt(np.power(self_coord[0] - crate_coords[0][crate], 2) + np.power(self_coord[1] -  crate_coords[1][crate], 2))
-        if (dist < min_dist_crate):
-            min_dist_crate = dist
-            x_dist_min_crate = crate_coords[0][crate] - self_coord[0]
-            y_dist_min_crate = self_coord[1] - crate_coords[1][crate]
-            coin_min = crate
-
-    if (min_dist_crate == 0):
-        min_dist_crate = 1
-    crate_dist = 150 + int((105 / min_dist_crate))
-
-    if (x_dist_min_crate > 0 and y_dist_min_crate > 0):
-        field_ch[0][2] = crate_dist
-    elif (x_dist_min_crate > 0 and y_dist_min_crate == 0):
-        field_ch[1][2] = crate_dist
-    elif (x_dist_min_crate > 0 and y_dist_min_crate < 0):
-        field_ch[2][2] = crate_dist
-
-    elif (x_dist_min_crate == 0 and y_dist_min_crate < 0):
-        field_ch[2][1] = crate_dist
-    elif (x_dist_min_crate == 0 and y_dist_min_crate > 0):
-        field_ch[0][1] = crate_dist
-
-    elif (x_dist_min_crate < 0 and y_dist_min_crate > 0):
-        field_ch[0][0] = crate_dist
-    elif (x_dist_min_crate < 0 and y_dist_min_crate == 0):
-        field_ch[1][0] = crate_dist
-    elif (x_dist_min_crate < 0 and y_dist_min_crate < 0):
-        field_ch[2][0] = crate_dist
-
-    field_ch[field_ch == 220] = crate_dist
-    ########
-
-
     # SEARCH FOR NEXT COIN
     min_dist = 1000
     x_dist_min = 0
@@ -278,6 +229,92 @@ def state_to_features(game_state: dict) -> np.array:
     elif (x_dist_min < 0 and y_dist_min < 0):
         field_ch[2][0] = coin_dist
     #######
+
+
+
+    # OTHER AGENTS
+    others = game_state.get('others')
+    others_arr = []
+    for i in range(len(others)):
+        others_arr.append(others[i][3])
+
+    # SEARCH FOR NEXT AGENT
+    min_dist_other_agent = 1000
+    x_dist_min_other_agent = 0
+    y_dist_min_other_agent = 0
+    for other_agent_ind in range(len(others_arr)):
+        dist = np.sqrt(
+            np.power(self_coord[0] - others_arr[other_agent_ind][0], 2) + np.power(self_coord[1] - others_arr[other_agent_ind][1], 2))
+        if (dist < min_dist_other_agent):
+            min_dist_other_agent = dist
+            x_dist_min_other_agent = others_arr[other_agent_ind][0] - self_coord[0]
+            y_dist_min_other_agent = self_coord[1] - others_arr[other_agent_ind][1]
+
+    if(min_dist_other_agent!=1000):
+        if (min_dist_other_agent == 0):
+            min_dist_other_agent = 1
+        other_agent_dist = 150 + int((105 / min_dist_other_agent))
+        other_agent_dist = -other_agent_dist
+
+        if (x_dist_min_other_agent > 0 and y_dist_min_other_agent > 0):
+            field_ch[0][2] = other_agent_dist
+        elif (x_dist_min_other_agent > 0 and y_dist_min_other_agent == 0):
+            field_ch[1][2] = other_agent_dist
+        elif (x_dist_min_other_agent > 0 and y_dist_min_other_agent < 0):
+            field_ch[2][2] = other_agent_dist
+
+        elif (x_dist_min_other_agent == 0 and y_dist_min_other_agent < 0):
+            field_ch[2][1] = other_agent_dist
+        elif (x_dist_min_other_agent == 0 and y_dist_min_other_agent > 0):
+            field_ch[0][1] = other_agent_dist
+
+        elif (x_dist_min_other_agent < 0 and y_dist_min_other_agent > 0):
+            field_ch[0][0] = other_agent_dist
+        elif (x_dist_min_other_agent < 0 and y_dist_min_other_agent == 0):
+            field_ch[1][0] = other_agent_dist
+        elif (x_dist_min_other_agent < 0 and y_dist_min_other_agent < 0):
+            field_ch[2][0] = other_agent_dist
+
+
+
+    # SEARCH FOR NEXT CRATE
+    min_dist_crate = 1000
+    x_dist_min_crate = 0
+    y_dist_min_crate = 0
+    for crate in range(len(crate_coords[1])):
+        dist = np.sqrt(np.power(self_coord[0] - crate_coords[0][crate], 2) + np.power(self_coord[1] -  crate_coords[1][crate], 2))
+        if (dist < min_dist_crate):
+            min_dist_crate = dist
+            x_dist_min_crate = crate_coords[0][crate] - self_coord[0]
+            y_dist_min_crate = self_coord[1] - crate_coords[1][crate]
+            coin_min = crate
+
+    if (min_dist_crate != 1000):
+        if (min_dist_crate == 0):
+            min_dist_crate = 1
+        crate_dist = 150 + int((105 / min_dist_crate))
+
+        if (x_dist_min_crate > 0 and y_dist_min_crate > 0):
+            field_ch[0][2] = crate_dist
+        elif (x_dist_min_crate > 0 and y_dist_min_crate == 0):
+            field_ch[1][2] = crate_dist
+        elif (x_dist_min_crate > 0 and y_dist_min_crate < 0):
+            field_ch[2][2] = crate_dist
+
+        elif (x_dist_min_crate == 0 and y_dist_min_crate < 0):
+            field_ch[2][1] = crate_dist
+        elif (x_dist_min_crate == 0 and y_dist_min_crate > 0):
+            field_ch[0][1] = crate_dist
+
+        elif (x_dist_min_crate < 0 and y_dist_min_crate > 0):
+            field_ch[0][0] = crate_dist
+        elif (x_dist_min_crate < 0 and y_dist_min_crate == 0):
+            field_ch[1][0] = crate_dist
+        elif (x_dist_min_crate < 0 and y_dist_min_crate < 0):
+            field_ch[2][0] = crate_dist
+
+        field_ch[field_ch == 220] = crate_dist
+    ########
 
     field_ch_ten = torch.from_numpy(field_ch).double()
     bombs_ch_ten = torch.from_numpy(bombs_ch).double()
@@ -353,7 +390,6 @@ def find_3neighbor_values(self_coord, field_ch):
             up_list[11] = 1
             up_list[12] = 1
 
-
     down = (self_coord[0], self_coord[1] + 1)
 
     down_down = (down[0], down[1] + 1)
@@ -399,8 +435,6 @@ def find_3neighbor_values(self_coord, field_ch):
             down_list[10] = 1
             down_list[11] = 1
             down_list[12] = 1
-
-
 
     left = (self_coord[0] - 1, self_coord[1])
 
@@ -513,9 +547,7 @@ def find_3neighbor_values(self_coord, field_ch):
         if (up_list[ind_to_check[1]] == 5 and up_list[ind_to_check[0]] == 5):
             up_list[ind_to_check[1]] = 1
 
-
     for j in range(len(duplicates_down_list)):
-
         duplicate_tuple = down_list_coord[duplicates_down_list[j]]
         ind_to_check = [i for i, tupl in enumerate(down_list_coord) if tupl == duplicate_tuple]
 
@@ -528,11 +560,7 @@ def find_3neighbor_values(self_coord, field_ch):
         if (down_list[ind_to_check[1]] == 5 and down_list[ind_to_check[0]] == 5):
             down_list[ind_to_check[1]] = 1
 
-        #down_list[duplicates_down_list[j]] = 1
-
     for k in range(len(duplicates_left_list)):
-        #ind_to_check = left_list_coord[left_list_coord == duplicates_up_list[k]]
-
         duplicate_tuple = left_list_coord[duplicates_left_list[k]]
         ind_to_check = [i for i, tupl in enumerate(left_list_coord) if tupl == duplicate_tuple]
 
@@ -545,12 +573,7 @@ def find_3neighbor_values(self_coord, field_ch):
         if (left_list[ind_to_check[1]] == 5 and left_list[ind_to_check[0]] == 5):
             left_list[ind_to_check[1]] = 1
 
-
-        #left_list[duplicates_left_list[k]] = 1
-
     for l in range(len(duplicates_right_list)):
-        #ind_to_check = right_list_coord[right_list_coord == duplicates_right_list[l]]
-
         duplicate_tuple = right_list_coord[duplicates_right_list[l]]
         ind_to_check = [i for i, tupl in enumerate(right_list_coord) if tupl == duplicate_tuple]
 
@@ -562,10 +585,6 @@ def find_3neighbor_values(self_coord, field_ch):
             right_list[ind_to_check[0]] = 1
         if (right_list[ind_to_check[1]] == 5 and right_list[ind_to_check[0]] == 5):
             right_list[ind_to_check[1]] = 1
-
-
-        #right_list[duplicates_right_list[l]] = 1
-
 
     list_of_lists_coord = [up_list_coord, down_list_coord, left_list_coord, right_list_coord]
     list_of_lists_val = [up_list, down_list, left_list, right_list]

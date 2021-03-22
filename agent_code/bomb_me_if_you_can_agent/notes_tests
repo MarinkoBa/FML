@@ -31,3 +31,19 @@ and third column for right), after first two rows for up, second two rows for do
 
 
  9. from -15 to -25 for invalid actions reward
+
+ 10. fixed model, 3steps free dir
+
+ 66 -> trained model from 6, training continued mit 10.
+
+ 99 -> trained model from 9, training continued mit 10.
+
+ 999 -> trained model from 99, training continued with 10 + oponents there in the field_ch -> minus value for nearest oponent, distance included.
+
+ 99cont -> trained model from 99, training continued 99
+
+ 99coins -> trained model from 99, training continued 99 with a goal to collect coins
+
+ 10cont -> continue 10 at ~45k
+
+

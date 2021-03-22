@@ -43,7 +43,7 @@ def setup_training(self):
     plt.title('Q-Net Training')
     plt.xlabel('Episode')
     plt.ylabel('Rewards')
-    plt.ylim([-1000, 1000])
+    plt.ylim([-2000, 2000])
     plt.ion()
 
 
@@ -219,7 +219,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     if last_game_state.get('round') % constants.EPISODES_TO_PLOT == 0:
         plt.plot(self.rewards_list)
         plt.plot(np.arange(0, len(self.reward_mean)) * constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean)
-        plt.savefig('9crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.png')
+        plt.savefig('99coins.png')
 
     action = last_action
     if(last_action != None):
@@ -248,7 +248,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
 
     # Store the model
-    with open("9crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt", "wb") as file:
+    with open("99coins.pt", "wb") as file:
         pickle.dump(self.trainings_model, file)
 
 
@@ -259,9 +259,36 @@ def reward_from_events(self, events: List[str]) -> int:
     Here you can modify the rewards your agent get so as to en/discourage
     certain behavior.
     """
+    # game_rewards = {
+    #     e.COIN_COLLECTED: 100,
+    #     # e.KILLED_OPPONENT: 500,
+    #     e.INVALID_ACTION: -25,
+    #     # e.WAITED: -5,
+    #     e.WAITED: -15,
+    #     e.MOVED_UP: -15,
+    #     e.MOVED_DOWN: -15,
+    #     e.MOVED_LEFT: -15,
+    #     e.MOVED_RIGHT: -15,
+    #     e.COIN_FOUND: 50,
+    #     e.CRATE_DESTROYED: 25,
+    #     e.BOMB_DROPPED: 30,
+    #     #e.BOMB_PLACED_AT_CRATE: 65,
+    #     #e.BOMB_PLACED_BAD: -25,
+    #     # e.BOMB_EXPLODED: 10,
+    #     # e.GOT_KILLED: -50,
+    #     e.KILLED_SELF: -300,
+    #     # e.SURVIVED_ROUND: 500,
+    #     # e.SURVIVED_BOMB: 25,
+    #     #e.MOVED_TOWARDS_CRATE: 35,
+    #     e.RETURN_TO_PREVIOUS_POS: -25,
+    #     #e.MOVED_AWAY_FROM_CRATE: -35
+    #     # PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
+    # }
+
+
     game_rewards = {
         e.COIN_COLLECTED: 100,
-        #e.KILLED_OPPONENT: 5,
+        #e.KILLED_OPPONENT: 500,
         e.INVALID_ACTION: -25,
         #e.WAITED: -5,
         e.WAITED: -15,
@@ -277,7 +304,7 @@ def reward_from_events(self, events: List[str]) -> int:
         #e.BOMB_EXPLODED: 10,
         #e.GOT_KILLED: -50,
         e.KILLED_SELF: -300,
-        #e.SURVIVED_ROUND: 10
+        #e.SURVIVED_ROUND: 500,
         #e.SURVIVED_BOMB: 25,
         e.MOVED_TOWARDS_CRATE: 35,
         e.RETURN_TO_PREVIOUS_POS: -25,
@@ -319,13 +346,4 @@ def sample_batch_and_train(self):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-
-
-
-
-
-
-
-
-
 
