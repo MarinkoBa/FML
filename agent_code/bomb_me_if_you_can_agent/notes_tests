@@ -25,3 +25,9 @@ and third column for right), after first two rows for up, second two rows for do
  free direction feature. If bomb there, you cannot go this direction.
  difference in a field feature: if bomb there, the value set to 3,2,1 (the way
  is 10, so even worse -> zero)
+
+
+ 8. 3.steps for free dir
+
+
+ 9. from -15 to -25 for invalid actions reward

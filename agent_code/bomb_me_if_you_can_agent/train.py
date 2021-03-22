@@ -219,7 +219,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     if last_game_state.get('round') % constants.EPISODES_TO_PLOT == 0:
         plt.plot(self.rewards_list)
         plt.plot(np.arange(0, len(self.reward_mean)) * constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean)
-        plt.savefig('7crate_destr_cor_place_bomb_2step_bomb_where_upscal_no_gui_lr0001_10steps.png')
+        plt.savefig('9crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.png')
 
     action = last_action
     if(last_action != None):
@@ -248,7 +248,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
 
     # Store the model
-    with open("7crate_destr_cor_place_bomb_2step_bomb_where_upscal_no_gui_lr0001_10steps.pt", "wb") as file:
+    with open("9crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt", "wb") as file:
         pickle.dump(self.trainings_model, file)
 
 
@@ -262,7 +262,7 @@ def reward_from_events(self, events: List[str]) -> int:
     game_rewards = {
         e.COIN_COLLECTED: 100,
         #e.KILLED_OPPONENT: 5,
-        e.INVALID_ACTION: -15,
+        e.INVALID_ACTION: -25,
         #e.WAITED: -5,
         e.WAITED: -15,
         e.MOVED_UP: -15,
