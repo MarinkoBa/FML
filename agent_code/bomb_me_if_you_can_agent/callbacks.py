@@ -32,10 +32,9 @@ def setup(self):
         self.trainings_model.train()
         self.trainings_model.double()
 
-        self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.001)
+        self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.0001)
         self.criterion = nn.SmoothL1Loss()
         self.criterion.cuda(0)
-        self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=100, gamma=0.9)
 
         self.target_model = Q_Net()
         self.target_model.cuda(0)
@@ -44,7 +43,7 @@ def setup(self):
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
-        with open("2crate_destr_sch_cor_place_bomb_other_dir_upscal_no_gui_lr0001.pt", "rb") as file:
+        with open("7crate_destr_cor_place_bomb_2step_bomb_where_upscal_no_gui_lr0001_10steps.pt", "rb") as file:
             self.trainings_model = pickle.load(file)
 
 
@@ -167,16 +166,65 @@ def state_to_features(game_state: dict) -> np.array:
     explosion_map_ch_ten = torch.from_numpy(explosion_map_ch).double()
 
     field_ch = game_state.get('field').transpose()
+
+    for bomb in bombs:
+        field_ch[bomb[0][1], bomb[0][0]] = 2
+
+
+    free_dir = np.zeros((3,3))
+
+    cnt_free_steps = 0
+
+    up = (self_coord[0], self_coord[1] - 1)
+    down = (self_coord[0], self_coord[1] + 1)
+    left = (self_coord[0] - 1, self_coord[1])
+    right = (self_coord[0] + 1, self_coord[1])
+    step_arr = [up, down, left, right]
+    for ind, st in enumerate(step_arr):
+        cnt_free_steps = 0
+        up2 = st[0], st[1] - 1
+        down2 = st[0], st[1] + 1
+        left2 = st[0] - 1, st[1]
+        right2 = st[0] + 1, st[1]
+        if (field_ch[st[1],st[0]] == 0):
+            cnt_free_steps += 1
+            if (ind != 1 and up2[0] >= 1 and up2[0] <= 15 and up2[1] >= 1 and up2[1] <= 15):
+                if (field_ch[up2[1],up2[0]] == 0):
+                    cnt_free_steps += 1
+            if (ind != 0 and down2[0] >= 1 and down2[0] <= 15 and down2[1] >= 1 and down2[1] <= 15):
+                if (field_ch[down2[1],down2[0]] == 0):
+                    cnt_free_steps += 1
+            if (ind != 3 and left2[0] >= 1 and left2[0] <= 15 and left2[1] >= 1 and left2[1] <= 15):
+                if (field_ch[left2[1],left2[0]] == 0):
+                    cnt_free_steps += 1
+            if (ind != 2 and right2[0] >= 1 and right2[0] <= 15 and right2[1] >= 1 and right2[1] <= 15):
+                if (field_ch[right2[1],right2[0]] == 0):
+                    cnt_free_steps += 1
+        if(ind==0):
+            free_dir[0][1]=cnt_free_steps *100
+        elif (ind == 1):
+            free_dir[2][1] = cnt_free_steps *100
+        elif (ind == 2):
+            free_dir[1][0] = cnt_free_steps *100
+        elif (ind == 3):
+            free_dir[1][2] = cnt_free_steps *100
+        #print("IND: " + str(ind) + "STEP: " + str(st) + "| free steps: " + str(cnt_free_steps))
+
+    free_dir[free_dir==0] = 10
+
     field_ch[self_coord[1], self_coord[0]] = 100
 
     field_ch[field_ch == -1] = 10
     field_ch[field_ch == 0] = 150
     field_ch[field_ch == 1] = 220
     field_ch[coins_ch==1] = 150
+
+    for bomb in bombs:
+        field_ch[bomb[0][1], bomb[0][0]] = bomb[1]
     # field_ch[other_agents_ch==1] = 150
 
     ii = np.where(field_ch == 220)
-    crate_coords = np.stack((ii[0], ii[1]))
+    crate_coords = np.stack((ii[1], ii[0]))
 
 
     field_ch = field_ch[self_coord[1] - 1:self_coord[1] + 2, self_coord[0] - 1:self_coord[0] + 2]
@@ -258,22 +306,24 @@ def state_to_features(game_state: dict) -> np.array:
     elif (x_dist_min < 0 and y_dist_min < 0):
         field_ch[2][0] = coin_dist
 
-    up = np.count_nonzero(field_ch[0:2][0:2][field_ch[0:2][0:2] >= 150])
-    up = up - np.count_nonzero(field_ch[0:2][0:2][field_ch[0:2][0:2] == 220])
-    down = np.count_nonzero(field_ch[1:3][0:2][field_ch[1:3][0:2] >= 150])
-    down = down - np.count_nonzero(field_ch[1:3][0:2][field_ch[1:3][0:2] == 220])
-    left = np.count_nonzero(field_ch.T[0:2][0:2][field_ch.T[0:2][0:2] >= 150])
-    left = left - np.count_nonzero(field_ch.T[0:2][0:2][field_ch.T[0:2][0:2] == 220])
-    right = np.count_nonzero(field_ch.T[1:3][0:2][field_ch.T[1:3][0:2] >= 150])
-    right = right - np.count_nonzero(field_ch.T[1:3][0:2][field_ch.T[1:3][0:2] == 220])
 
-    free_dir_ch = np.zeros_like(field_ch)
-    free_dir_ch[1][0] = left * 100
-    free_dir_ch[0][1] = up * 100
-    free_dir_ch[1][2] = right * 100
-    free_dir_ch[2][1] = down * 100
+    #up = np.count_nonzero(field_ch[0:2][0:2][field_ch[0:2][0:2] >= 150])
+    #up = up - np.count_nonzero(field_ch[0:2][0:2][field_ch[0:2][0:2] == 255])
+    #down = np.count_nonzero(field_ch[1:3][0:2][field_ch[1:3][0:2] >= 150])
+    #down = \
+    #    down - np.count_nonzero(field_ch[1:3][0:2][field_ch[1:3][0:2] == 255])
+    #left = np.count_nonzero(field_ch.T[0:2][0:2][field_ch.T[0:2][0:2] >= 150])
+    #left = left - np.count_nonzero(field_ch.T[0:2][0:2][field_ch.T[0:2][0:2] == 255])
+    #right = np.count_nonzero(field_ch.T[1:3][0:2][field_ch.T[1:3][0:2] >= 150])
+    #right = right - np.count_nonzero(field_ch.T[1:3][0:2][field_ch.T[1:3][0:2] == 255])
 
-    free_dir_ten = torch.from_numpy(free_dir_ch).double()
+    #free_dir_ch = np.zeros_like(field_ch)
+    #free_dir_ch[1][0] = left * 100
+    #free_dir_ch[0][1] = up * 100
+    #free_dir_ch[1][2] = right * 100
+    #free_dir_ch[2][1] = down * 100
+
+    free_dir_ten = torch.from_numpy(free_dir).double()
     field_ch_ten = torch.from_numpy(field_ch).double()
 
     stacked_channels = torch.stack((field_ch_ten, bombs_ch_ten, free_dir_ten), 0)

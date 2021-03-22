@@ -3,6 +3,7 @@ import random
 from collections import namedtuple, deque
 from typing import List
 import numpy as np
+import settings as s
 
 import matplotlib.pyplot as plt
 import torch
@@ -35,6 +36,7 @@ def setup_training(self):
     self.round_events = []
     self.rewards_list = []
     self.reward_mean = []
+    self.penultimate_position = (0,0)
 
     # setup plot
 
@@ -82,6 +84,11 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
                         e.BOMB_DROPPED in events) and old_game_state.get('self')[3]==bombs[i][0]:
                     events.append(e.BOMB_PLACED_BAD)
 
+        # check if old position
+        if next_game_state.get('step') >= 2:
+            if next_game_state.get('self')[3] == self.penultimate_position and e.BOMB_DROPPED not in events and e.WAITED not in events:
+                events.append(e.RETURN_TO_PREVIOUS_POS)
+            self.penultimate_position = old_game_state.get('self')[3]
 
         # CHECK IF MOVED TOWARDS CRATE
         self_coord = old_game_state.get('self')[3]
@@ -212,7 +219,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     if last_game_state.get('round') % constants.EPISODES_TO_PLOT == 0:
         plt.plot(self.rewards_list)
         plt.plot(np.arange(0, len(self.reward_mean)) * constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean)
-        plt.savefig('2crate_destr_sch_cor_place_bomb_other_dir_upscal_no_gui_lr0001.png')
+        plt.savefig('7crate_destr_cor_place_bomb_2step_bomb_where_upscal_no_gui_lr0001_10steps.png')
 
     action = last_action
     if(last_action != None):
@@ -227,6 +234,11 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     if(constants.ROUNDS_NR%50 == 0):
         self.target_model.load_state_dict(self.trainings_model.state_dict())
 
+    if constants.ROUNDS_NR%10000 == 0:
+        s.MAX_STEPS = s.MAX_STEPS + 10
+        if s.MAX_STEPS >= 400:
+            s.MAX_STEPS=400
+
     sample_batch_and_train(self)
 
 
@@ -236,7 +248,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
 
     # Store the model
-    with open("2crate_destr_sch_cor_place_bomb_other_dir_upscal_no_gui_lr0001.pt", "wb") as file:
+    with open("7crate_destr_cor_place_bomb_2step_bomb_where_upscal_no_gui_lr0001_10steps.pt", "wb") as file:
         pickle.dump(self.trainings_model, file)
 
 
@@ -257,18 +269,19 @@ def reward_from_events(self, events: List[str]) -> int:
         e.MOVED_DOWN: -15,
         e.MOVED_LEFT: -15,
         e.MOVED_RIGHT: -15,
-        e.COIN_FOUND: 120,
+        e.COIN_FOUND: 50,
         e.CRATE_DESTROYED: 25,
-        #e.BOMB_DROPPED: 10,
+        e.BOMB_DROPPED: 30,
         e.BOMB_PLACED_AT_CRATE: 65,
-        e.BOMB_PLACED_BAD: -40,
+        e.BOMB_PLACED_BAD: -25,
         #e.BOMB_EXPLODED: 10,
         #e.GOT_KILLED: -50,
-        e.KILLED_SELF: -200,
+        e.KILLED_SELF: -300,
         #e.SURVIVED_ROUND: 10
-        e.SURVIVED_BOMB: 25,
+        #e.SURVIVED_BOMB: 25,
         e.MOVED_TOWARDS_CRATE: 35,
-        #e.MOVED_AWAY_FROM_CRATE: -15
+        e.RETURN_TO_PREVIOUS_POS: -25,
+        e.MOVED_AWAY_FROM_CRATE: -35
         #PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
     }
     reward_sum = 0
@@ -306,7 +319,6 @@ def sample_batch_and_train(self):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        self.scheduler.step()
 
 
 
