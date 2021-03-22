@@ -3,12 +3,9 @@ import random
 from collections import namedtuple, deque
 from typing import List
 import numpy as np
-import torch
-import torch.nn as nn
-import settings as s
+from agent_code.bomb_me_if_you_can_agent import constants
 
 import events as e
-from .callbacks import state_to_features
 from agent_code.bomb_me_if_you_can_agent import constants
 import matplotlib.pyplot as plt
 import os
@@ -31,6 +28,7 @@ def setup_training(self):
     """
     # Example: Setup an array that will note transition tuples
     # (s, a, r, s')
+    self.actions = constants.ACTIONS
     self.transitions = deque(maxlen=constants.TRANSITION_HISTORY_SIZE)
     self.penultimate_position = (0,0)
 
@@ -45,12 +43,6 @@ def setup_training(self):
     plt.ylabel('Rewards')
     plt.ylim([-constants.SIZE_Y_AXIS, constants.SIZE_Y_AXIS])
     plt.ion()
-
-    # Pre Training:
-    load_training_data(self)
-    for i in range(100):
-        print('Pre Training Round: '+str(i))
-        train_neural_network(self)
 
 
 def game_events_occurred(self, old_game_state: dict, self_action: str, next_game_state: dict, events: List[str]):
@@ -106,13 +98,10 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
     if (self_action != None):
         action = self.actions.index(self_action)
 
-    transition = Transition(state_to_features(old_game_state), action, state_to_features(next_game_state),
-                            reward_from_events(self, events))
+    transition = Transition(old_game_state, action, next_game_state,
+                            events)
     if transition[0] != None:
         self.transitions.append(transition)
-
-    train_neural_network(self)
-
 
 
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
@@ -147,7 +136,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     if (last_action != None):
         action = self.actions.index(last_action)
 
-    transition = Transition(state_to_features(last_game_state), action, None, reward_from_events(self, events))
+    transition = Transition(last_game_state, action, None,  events)
 
     if transition[0] != None:
         self.transitions.append(transition)
@@ -161,20 +150,14 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
         print('UPDATE TARGET MODEL')
         print()
 
-    # Increase Steps per Round after particular Episodes
-    if constants.ROUNDS_NR % constants.INCREASE_STEPS_AFTER_EPISODES == 0 and s.MAX_STEPS < 400:
-        s.MAX_STEPS = s.MAX_STEPS + constants.INCREASE_STEP_VALUE
-    constants.ROUNDS_NR = constants.ROUNDS_NR +1
-
     print()
     print('Epsilon: ' + str(constants.EPS))
     print()
 
-
     # Store the model
-    with open(constants.NAME_OF_FILES + ".pt", "wb") as file:
-        pickle.dump(self.training_model.cpu(), file)
-    self.training_model.cuda()
+    with open("training_data" + ".pt", "wb") as file:
+        pickle.dump(self.transitions, file)
+
 
 
 def reward_from_events(self, events: List[str]) -> int:
@@ -196,15 +179,15 @@ def reward_from_events(self, events: List[str]) -> int:
         e.OPPONENT_ELIMINATED: 0.1,  # nicht durch unsern agent direkt gekillt
         e.BOMB_DROPPED: 0,
         e.BOMB_EXPLODED: 0,
-        e.SURVIVED_BOMB: 0.1,
+        #e.SURVIVED_BOMB: 0.1,
         e.PLACED_BOMB_FIRST_STEP: -0.7, # Bomb in first step, is at all time bad
-        e.MOVED_UP: -0.1,
-        e.MOVED_DOWN: -0.1,
-        e.MOVED_LEFT: -0.1,
-        e.MOVED_RIGHT: -0.1,
+        e.MOVED_UP: -0.08,
+        e.MOVED_DOWN: -0.08,
+        e.MOVED_LEFT: -0.08,
+        e.MOVED_RIGHT: -0.08,
         e.WAITED: -0.4,
-        e.BOMB_PLACED_AT_CRATE: 0.4,
-        e.RETURN_TO_PREVIOUS_POS: -0.2
+        e.BOMB_PLACED_AT_CRATE: 0.2,
+        #e.RETURN_TO_PREVIOUS_POS: -0.4
     }
     reward_sum = 0
     for event in events:
@@ -216,40 +199,3 @@ def reward_from_events(self, events: List[str]) -> int:
 
 def sample_batch(self):
     return random.sample(self.transitions, constants.BATCH_SIZE)
-
-def load_training_data(self):
-    with open("training_data.pt", "rb") as file:
-        transitions = pickle.load(file)
-
-    for transition in transitions:
-        trans = Transition(state_to_features(transition[0]), transition[1], state_to_features(transition[2]), reward_from_events(self, transition[3]))
-        self.transitions.append(trans)
-
-def train_neural_network(self):
-    # TODO check if Batch filled, train
-    if len(self.transitions) >= constants.BATCH_SIZE and self.train:
-        batch = random.sample(self.transitions, constants.BATCH_SIZE)
-        transitions = Transition(*zip(*batch))
-
-        next_game_state_filled_ind = [i for i, val in enumerate(transitions.next_state) if val != None]
-        next_game_state_filled_val = [val for i, val in enumerate(transitions.next_state) if val != None]
-
-        game_state = torch.cat(transitions.state)
-        action = torch.tensor(transitions.action)
-        reward = torch.tensor(transitions.reward)
-        next_game_state = torch.cat(next_game_state_filled_val)
-
-        # TODO modify input -> tensor 128x7x17x17
-        q_val_taken_actions = self.training_model(game_state.to(device='cuda:0')).gather(1, action.to(
-            device='cuda:0').unsqueeze(1))
-
-        q_val_next_state = torch.max(self.target_model(next_game_state), dim=1).values.to(device='cuda')
-        q_val_next_state_full = torch.zeros(game_state.shape[0]).double().to(device='cuda')
-        q_val_next_state_full[next_game_state_filled_ind] = q_val_next_state
-
-        final_state_action_values = (q_val_next_state_full * constants.GAMMA) + reward.to(device='cuda')
-
-        loss = self.criterion(q_val_taken_actions, final_state_action_values.unsqueeze(1))
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
