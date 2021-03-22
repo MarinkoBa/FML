@@ -5,7 +5,7 @@ from agent_code.bomb_me_if_you_can_agent import features
 import numpy as np
 import torch
 from torch import nn
-from agent_code.bomb_me_if_you_can_agent.q_lin_network import Q_Net
+from agent_code.bomb_me_if_you_can_agent.q_conv_network import Q_Net
 import time
 from agent_code.bomb_me_if_you_can_agent import constants
 
@@ -106,9 +106,9 @@ def state_to_features(game_state: dict) -> np.array:
     if game_state is None:
         return None
 
-    stacked_channels = features.features_3x3_space(game_state)
-    stacked_channels = stacked_channels.unsqueeze(0)
-    #stacked_channels = features.feature_field(game_state)
+    #stacked_channels = features.features_3x3_space(game_state)
+    #stacked_channels = stacked_channels.unsqueeze(0)
+    stacked_channels = features.feature_field(game_state)
 
     # and return them as a vector
     return stacked_channels

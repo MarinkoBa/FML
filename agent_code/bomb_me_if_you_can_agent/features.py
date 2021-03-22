@@ -298,16 +298,16 @@ def feature_field(game_state):
                 if left:
                     bomb_field[bomb[0][1], bomb[0][0] - i] = bomb_timer
 
-    field = get_7x7_submatrix(field,self_coord)
-    others = get_7x7_submatrix(other_field,self_coord)
-    bombs = get_7x7_submatrix(bomb_field,self_coord)
-    coins = get_7x7_submatrix(coins,self_coord)
+    # field = get_7x7_submatrix(field,self_coord)
+    # others = get_7x7_submatrix(other_field,self_coord)
+    # bombs = get_7x7_submatrix(bomb_field,self_coord)
+    # coins = get_7x7_submatrix(coins,self_coord)
 
 
     field = torch.tensor(field).double()
     #self = torch.tensor(self).double()
-    others = torch.tensor(others).double()
-    bombs = torch.tensor(bombs).double()
+    others = torch.tensor(other_field).double()
+    bombs = torch.tensor(bomb_field).double()
     coins = torch.tensor(coins).double()
 
     field = torch.tensor(field).double()

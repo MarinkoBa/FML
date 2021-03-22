@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="added new feature-creation function">
+    <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="added new free_direction into 3x3 feature">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/callbacks.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/callbacks.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/my-saved-model.pt" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/my-saved-model.pt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/my-saved-model_plot.png" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/my-saved-model_plot.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/q_lin_network.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/q_lin_network.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/q_conv_network.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/q_conv_network.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,7 +81,7 @@
         </ENTRIES>
       </EXTENSION>
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
-      <option name="PARAMETERS" value="play --agents bomb_me_if_you_can_agent --train 1" />
+      <option name="PARAMETERS" value="play --agents bomb_me_if_you_can_agent --train 1 --no-gui" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -107,6 +107,8 @@
       <workItem from="1615213265437" duration="369000" />
       <workItem from="1615657786028" duration="1863000" />
       <workItem from="1616098754366" duration="3969000" />
+      <workItem from="1616379344915" duration="1112000" />
+      <workItem from="1616418828210" duration="3961000" />
     </task>
     <task id="LOCAL-00001" summary="added mean_reward plot">
       <created>1616168030463</created>
@@ -164,7 +166,14 @@
       <option name="project" value="LOCAL" />
       <updated>1616347296705</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="added new free_direction into 3x3 feature">
+      <created>1616357271693</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1616357271693</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -207,15 +216,31 @@
     <MESSAGE value="as" />
     <MESSAGE value="change crates feature, show just nearest crate" />
     <MESSAGE value="added new feature-creation function" />
-    <option name="LAST_COMMIT_MESSAGE" value="added new feature-creation function" />
+    <MESSAGE value="added new free_direction into 3x3 feature" />
+    <option name="LAST_COMMIT_MESSAGE" value="added new free_direction into 3x3 feature" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py</url>
-          <line>79</line>
-          <option name="timeStamp" value="99" />
+          <line>180</line>
+          <option name="timeStamp" value="101" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py</url>
+          <line>306</line>
+          <option name="timeStamp" value="102" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/callbacks.py</url>
+          <line>113</line>
+          <option name="timeStamp" value="103" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py</url>
+          <line>318</line>
+          <option name="timeStamp" value="104" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -226,6 +251,6 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/FML$main.coverage" NAME="main Coverage Results" MODIFIED="1616356778548" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/FML$main.coverage" NAME="main Coverage Results" MODIFIED="1616423152751" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
