@@ -37,14 +37,35 @@ def setup_training(self):
     self.round_events = []
     self.rewards_list = []
     self.reward_mean = []
+    self.rewards_list_game = []
+    self.reward_mean_game = []
+    self.penultimate_position = (0, 0)
 
     # setup plot
 
-    plt.title('Q-Net Training')
+    # plt.title('Q-Net Training')
+    # plt.xlabel('Episode')
+    # plt.ylabel('Rewards')
+    # plt.ylim([-constants.SIZE_Y_AXIS, constants.SIZE_Y_AXIS])
+    # plt.ion()
+
+    plt.figure(figsize=(12, 5))
+
+    plt.subplot(121)
+    plt.title('Rewards training')
     plt.xlabel('Episode')
     plt.ylabel('Rewards')
-    plt.ylim([-15, 2])
+    plt.ylim([-constants.SIZE_Y_AXIS, constants.SIZE_Y_AXIS])
     plt.ion()
+
+    plt.subplot(122)
+    plt.title('Rewards game')
+    plt.xlabel('Episode')
+    plt.ylabel('Rewards')
+    plt.ylim([0, 30])
+    plt.ion()
+
+    plt.suptitle('Q-Net Training')
 
     # Pre Training:
     load_training_data(self)
@@ -133,14 +154,29 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
         self.round_events.append(event)
 
     self.rewards_list.append(reward_from_events(self, self.round_events))
+
+    sum_reward_round = 0
+    for reward in self.round_events:
+        if (reward == e.COIN_COLLECTED):
+            sum_reward_round += 1
+        elif (reward == e.KILLED_OPPONENT):
+            sum_reward_round += 5
+    self.rewards_list_game.append(sum_reward_round)
+
     self.round_events = []
 
     if last_game_state.get('round') % constants.PLOT_MEAN_OVER_ROUNDS == 0:
         self.reward_mean.append(np.mean(self.rewards_list[-constants.PLOT_MEAN_OVER_ROUNDS:]))
+        self.reward_mean_game.append(np.mean(self.rewards_list_game[-constants.PLOT_MEAN_OVER_ROUNDS:]))
 
     if last_game_state.get('round') % constants.EPISODES_TO_PLOT == 0:
+        plt.subplot(121)
         plt.plot(self.rewards_list)
-        plt.plot(np.arange(0, len(self.reward_mean))* constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean)
+        plt.plot(np.arange(0, len(self.reward_mean)) * constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean)
+
+        plt.subplot(122)
+        plt.plot(self.rewards_list_game)
+        plt.plot(np.arange(0, len(self.reward_mean_game)) * constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean_game)
         plt.savefig(constants.NAME_OF_FILES + '_plot.png')
 
     action = last_action
@@ -162,9 +198,9 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
         print()
 
     # Increase Steps per Round after particular Episodes
-    #if constants.ROUNDS_NR % constants.INCREASE_STEPS_AFTER_EPISODES == 0 and s.MAX_STEPS < 400:
-    #    s.MAX_STEPS = s.MAX_STEPS + constants.INCREASE_STEP_VALUE
-    #constants.ROUNDS_NR = constants.ROUNDS_NR +1
+    if constants.ROUNDS_NR % constants.INCREASE_STEPS_AFTER_EPISODES == 0 and s.MAX_STEPS < 400:
+        s.MAX_STEPS = s.MAX_STEPS + constants.INCREASE_STEP_VALUE
+    constants.ROUNDS_NR = constants.ROUNDS_NR +1
 
     print()
     print('Epsilon: ' + str(constants.EPS))
@@ -188,7 +224,7 @@ def reward_from_events(self, events: List[str]) -> int:
         e.COIN_COLLECTED: 0.5,
         e.KILLED_OPPONENT: 0.7,
         e.INVALID_ACTION: -0.9,  # macht es sinn invalide aktionen zu bestrafen?
-        # e.COIN_FOUND: 0.1,
+        e.COIN_FOUND: 0.01,
         e.CRATE_DESTROYED: 0.15,
         e.GOT_KILLED: -0.80,
         e.KILLED_SELF: -1,
