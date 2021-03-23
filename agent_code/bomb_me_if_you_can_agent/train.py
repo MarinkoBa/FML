@@ -198,11 +198,11 @@ def reward_from_events(self, events: List[str]) -> int:
         e.BOMB_EXPLODED: 0,
         e.SURVIVED_BOMB: 0.1,
         e.PLACED_BOMB_FIRST_STEP: -0.7, # Bomb in first step, is at all time bad
-        e.MOVED_UP: -0.1,
-        e.MOVED_DOWN: -0.1,
-        e.MOVED_LEFT: -0.1,
-        e.MOVED_RIGHT: -0.1,
-        e.WAITED: -0.4,
+        e.MOVED_UP: -0.05,
+        e.MOVED_DOWN: -0.05,
+        e.MOVED_LEFT: -0.05,
+        e.MOVED_RIGHT: -0.05,
+        e.WAITED: -0.2,
         e.BOMB_PLACED_AT_CRATE: 0.4,
         e.RETURN_TO_PREVIOUS_POS: -0.2
     }

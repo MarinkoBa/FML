@@ -1,5 +1,5 @@
 AMOUNT_OF_TRAINING_EPISODES = 100000
-NAME_OF_FILES = 'my-saved-model'
+NAME_OF_FILES = 'coin_based_model_2'
 
 # Hyper parameters
 TRANSITION_HISTORY_SIZE = 10000  # keep only ... last transitions
@@ -11,7 +11,7 @@ EPS = 0.5
 EPS_END = 0.2
 EPS_DECAY = 1000
 TARGET_UPDATE = 10
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.1
 
 
 ROUNDS_MODEL_UPDATE = 5
