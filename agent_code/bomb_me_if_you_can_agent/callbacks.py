@@ -26,7 +26,7 @@ def setup(self):
 
     :param self: This object is passed to all callbacks and you can set arbitrary values.
     """
-    if self.train or not os.path.isfile("99crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt"):
+    if self.train or not os.path.isfile("99coins.pt"):
         self.logger.info("Setting up model from scratch.")
 
         #self.trainings_model = Q_Net()
@@ -42,10 +42,10 @@ def setup(self):
         #self.target_model.cuda(0)
         #self.target_model.double()
 
-        with open("99crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt", "rb") as file:
+        with open("99coins.pt", "rb") as file:
             self.trainings_model = pickle.load(file)
 
-        with open("99crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt", "rb") as file:
+        with open("99coins.pt", "rb") as file:
             self.target_model = pickle.load(file)
 
         self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.0001)
@@ -55,13 +55,8 @@ def setup(self):
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
-        with open("99crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt", "rb") as file:
+        with open("99coins.pt", "rb") as file:
             self.trainings_model = pickle.load(file)
-
-
-
-
-
 
 def act(self, game_state: dict) -> str:
     """

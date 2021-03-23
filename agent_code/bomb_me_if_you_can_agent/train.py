@@ -36,15 +36,38 @@ def setup_training(self):
     self.round_events = []
     self.rewards_list = []
     self.reward_mean = []
+    self.rewards_list_game = []
+    self.reward_mean_game = []
     self.penultimate_position = (0,0)
 
     # setup plot
 
-    plt.title('Q-Net Training')
+    # plt.title('Q-Net Training')
+    # plt.xlabel('Episode')
+    # plt.ylabel('Rewards')
+    # plt.ylim([-2000, 2000])
+    # plt.ion()
+
+    plt.figure(figsize=(12, 5))
+
+    plt.subplot(121)
+    plt.title('Rewards training')
     plt.xlabel('Episode')
     plt.ylabel('Rewards')
     plt.ylim([-2000, 2000])
     plt.ion()
+
+
+    plt.subplot(122)
+    plt.title('Rewards game')
+    plt.xlabel('Episode')
+    plt.ylabel('Rewards')
+    plt.ylim([0, 30])
+    plt.ion()
+
+    plt.suptitle('Q-Net Training')
+
+
 
 
 def game_events_occurred(self, old_game_state: dict, self_action: str, next_game_state: dict, events: List[str]):
@@ -211,15 +234,33 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
         self.round_events.append(event)
 
     self.rewards_list.append(reward_from_events(self, self.round_events))
+
+
+    sum_reward_round = 0
+    for reward in self.round_events:
+        if(reward==e.COIN_COLLECTED):
+            sum_reward_round+=1
+        elif(reward==e.KILLED_OPPONENT):
+            sum_reward_round+=5
+    self.rewards_list_game.append(sum_reward_round)
+
     self.round_events = []
+
 
     if last_game_state.get('round') % constants.PLOT_MEAN_OVER_ROUNDS == 0:
         self.reward_mean.append(np.mean(self.rewards_list[-constants.PLOT_MEAN_OVER_ROUNDS:]))
+        self.reward_mean_game.append(np.mean(self.rewards_list_game[-constants.PLOT_MEAN_OVER_ROUNDS:]))
 
     if last_game_state.get('round') % constants.EPISODES_TO_PLOT == 0:
+        plt.subplot(121)
         plt.plot(self.rewards_list)
         plt.plot(np.arange(0, len(self.reward_mean)) * constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean)
-        plt.savefig('99coins.png')
+
+        plt.subplot(122)
+        plt.plot(self.rewards_list_game)
+        plt.plot(np.arange(0, len(self.reward_mean_game)) * constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean_game)
+        plt.savefig('99coins_plot.png')
+
 
     action = last_action
     if(last_action != None):
@@ -259,38 +300,11 @@ def reward_from_events(self, events: List[str]) -> int:
     Here you can modify the rewards your agent get so as to en/discourage
     certain behavior.
     """
-    # game_rewards = {
-    #     e.COIN_COLLECTED: 100,
-    #     # e.KILLED_OPPONENT: 500,
-    #     e.INVALID_ACTION: -25,
-    #     # e.WAITED: -5,
-    #     e.WAITED: -15,
-    #     e.MOVED_UP: -15,
-    #     e.MOVED_DOWN: -15,
-    #     e.MOVED_LEFT: -15,
-    #     e.MOVED_RIGHT: -15,
-    #     e.COIN_FOUND: 50,
-    #     e.CRATE_DESTROYED: 25,
-    #     e.BOMB_DROPPED: 30,
-    #     #e.BOMB_PLACED_AT_CRATE: 65,
-    #     #e.BOMB_PLACED_BAD: -25,
-    #     # e.BOMB_EXPLODED: 10,
-    #     # e.GOT_KILLED: -50,
-    #     e.KILLED_SELF: -300,
-    #     # e.SURVIVED_ROUND: 500,
-    #     # e.SURVIVED_BOMB: 25,
-    #     #e.MOVED_TOWARDS_CRATE: 35,
-    #     e.RETURN_TO_PREVIOUS_POS: -25,
-    #     #e.MOVED_AWAY_FROM_CRATE: -35
-    #     # PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
-    # }
-
-
     game_rewards = {
         e.COIN_COLLECTED: 100,
-        #e.KILLED_OPPONENT: 500,
+        # e.KILLED_OPPONENT: 500,
         e.INVALID_ACTION: -25,
-        #e.WAITED: -5,
+        # e.WAITED: -5,
         e.WAITED: -15,
         e.MOVED_UP: -15,
         e.MOVED_DOWN: -15,
@@ -299,18 +313,45 @@ def reward_from_events(self, events: List[str]) -> int:
         e.COIN_FOUND: 50,
         e.CRATE_DESTROYED: 25,
         e.BOMB_DROPPED: 30,
-        e.BOMB_PLACED_AT_CRATE: 65,
-        e.BOMB_PLACED_BAD: -25,
-        #e.BOMB_EXPLODED: 10,
-        #e.GOT_KILLED: -50,
+        #e.BOMB_PLACED_AT_CRATE: 65,
+        #e.BOMB_PLACED_BAD: -25,
+        # e.BOMB_EXPLODED: 10,
+        # e.GOT_KILLED: -50,
         e.KILLED_SELF: -300,
-        #e.SURVIVED_ROUND: 500,
-        #e.SURVIVED_BOMB: 25,
-        e.MOVED_TOWARDS_CRATE: 35,
+        # e.SURVIVED_ROUND: 500,
+        # e.SURVIVED_BOMB: 25,
+        #e.MOVED_TOWARDS_CRATE: 35,
         e.RETURN_TO_PREVIOUS_POS: -25,
-        e.MOVED_AWAY_FROM_CRATE: -35
-        #PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
+        #e.MOVED_AWAY_FROM_CRATE: -35
+        # PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
     }
+
+
+    # game_rewards = {
+    #     e.COIN_COLLECTED: 100,
+    #     e.KILLED_OPPONENT: 500,
+    #     e.INVALID_ACTION: -25,
+    #     #e.WAITED: -5,
+    #     e.WAITED: -15,
+    #     e.MOVED_UP: -15,
+    #     e.MOVED_DOWN: -15,
+    #     e.MOVED_LEFT: -15,
+    #     e.MOVED_RIGHT: -15,
+    #     e.COIN_FOUND: 50,
+    #     e.CRATE_DESTROYED: 25,
+    #     e.BOMB_DROPPED: 30,
+    #     e.BOMB_PLACED_AT_CRATE: 65,
+    #     e.BOMB_PLACED_BAD: -25,
+    #     #e.BOMB_EXPLODED: 10,
+    #     #e.GOT_KILLED: -50,
+    #     e.KILLED_SELF: -300,
+    #     #e.SURVIVED_ROUND: 500,
+    #     #e.SURVIVED_BOMB: 25,
+    #     e.MOVED_TOWARDS_CRATE: 35,
+    #     e.RETURN_TO_PREVIOUS_POS: -25,
+    #     e.MOVED_AWAY_FROM_CRATE: -35
+    #     #PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
+    # }
     reward_sum = 0
     for event in events:
         if event in game_rewards:
