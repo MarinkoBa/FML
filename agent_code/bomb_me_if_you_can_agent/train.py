@@ -43,7 +43,7 @@ def setup_training(self):
     plt.title('Q-Net Training')
     plt.xlabel('Episode')
     plt.ylabel('Rewards')
-    plt.ylim([-constants.SIZE_Y_AXIS, constants.SIZE_Y_AXIS])
+    plt.ylim([-15, 2])
     plt.ion()
 
     # Pre Training:
@@ -162,9 +162,9 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
         print()
 
     # Increase Steps per Round after particular Episodes
-    if constants.ROUNDS_NR % constants.INCREASE_STEPS_AFTER_EPISODES == 0 and s.MAX_STEPS < 400:
-        s.MAX_STEPS = s.MAX_STEPS + constants.INCREASE_STEP_VALUE
-    constants.ROUNDS_NR = constants.ROUNDS_NR +1
+    #if constants.ROUNDS_NR % constants.INCREASE_STEPS_AFTER_EPISODES == 0 and s.MAX_STEPS < 400:
+    #    s.MAX_STEPS = s.MAX_STEPS + constants.INCREASE_STEP_VALUE
+    #constants.ROUNDS_NR = constants.ROUNDS_NR +1
 
     print()
     print('Epsilon: ' + str(constants.EPS))
@@ -188,7 +188,7 @@ def reward_from_events(self, events: List[str]) -> int:
         e.COIN_COLLECTED: 0.5,
         e.KILLED_OPPONENT: 0.7,
         e.INVALID_ACTION: -0.9,  # macht es sinn invalide aktionen zu bestrafen?
-        e.COIN_FOUND: 0.01,
+        # e.COIN_FOUND: 0.1,
         e.CRATE_DESTROYED: 0.15,
         e.GOT_KILLED: -0.80,
         e.KILLED_SELF: -1,
@@ -197,14 +197,14 @@ def reward_from_events(self, events: List[str]) -> int:
         e.BOMB_DROPPED: 0,
         e.BOMB_EXPLODED: 0,
         e.SURVIVED_BOMB: 0.1,
-        e.PLACED_BOMB_FIRST_STEP: -0.7, # Bomb in first step, is at all time bad
+        e.PLACED_BOMB_FIRST_STEP: -0.7,  # Bomb in first step, is at all time bad
         e.MOVED_UP: -0.05,
         e.MOVED_DOWN: -0.05,
         e.MOVED_LEFT: -0.05,
         e.MOVED_RIGHT: -0.05,
-        e.WAITED: -0.2,
-        e.BOMB_PLACED_AT_CRATE: 0.4,
-        e.RETURN_TO_PREVIOUS_POS: -0.2
+        e.WAITED: -0.4,
+        e.BOMB_PLACED_AT_CRATE: 0.2,
+        e.RETURN_TO_PREVIOUS_POS: -0.4
     }
     reward_sum = 0
     for event in events:
