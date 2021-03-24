@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="ready to train with crates 2.">
+    <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="modified, free_dir including actions and multiple crates feature">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -201,7 +198,14 @@
       <option name="project" value="LOCAL" />
       <updated>1616540314844</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="modified, free_dir including actions and multiple crates feature">
+      <created>1616597455912</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1616597455912</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -249,7 +253,8 @@
     <MESSAGE value="load model also in training mode" />
     <MESSAGE value="push coin_based_model" />
     <MESSAGE value="ready to train with crates 2." />
-    <option name="LAST_COMMIT_MESSAGE" value="ready to train with crates 2." />
+    <MESSAGE value="modified, free_dir including actions and multiple crates feature" />
+    <option name="LAST_COMMIT_MESSAGE" value="modified, free_dir including actions and multiple crates feature" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
