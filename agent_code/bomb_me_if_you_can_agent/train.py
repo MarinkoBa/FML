@@ -259,7 +259,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
         plt.subplot(122)
         plt.plot(self.rewards_list_game)
         plt.plot(np.arange(0, len(self.reward_mean_game)) * constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean_game)
-        plt.savefig('99coins_plot.png')
+        plt.savefig('10cont_with_two_peacefull_agents_and_one_random_optimized_bomb.png')
 
 
     action = last_action
@@ -289,7 +289,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
 
     # Store the model
-    with open("99coins.pt", "wb") as file:
+    with open("10cont_with_two_peacefull_agents_and_one_random_optimized_bomb.pt", "wb") as file:
         pickle.dump(self.trainings_model, file)
 
 
@@ -300,38 +300,11 @@ def reward_from_events(self, events: List[str]) -> int:
     Here you can modify the rewards your agent get so as to en/discourage
     certain behavior.
     """
-    game_rewards = {
-        e.COIN_COLLECTED: 100,
-        # e.KILLED_OPPONENT: 500,
-        e.INVALID_ACTION: -25,
-        # e.WAITED: -5,
-        e.WAITED: -15,
-        e.MOVED_UP: -15,
-        e.MOVED_DOWN: -15,
-        e.MOVED_LEFT: -15,
-        e.MOVED_RIGHT: -15,
-        e.COIN_FOUND: 50,
-        e.CRATE_DESTROYED: 25,
-        e.BOMB_DROPPED: 30,
-        #e.BOMB_PLACED_AT_CRATE: 65,
-        #e.BOMB_PLACED_BAD: -25,
-        # e.BOMB_EXPLODED: 10,
-        # e.GOT_KILLED: -50,
-        e.KILLED_SELF: -300,
-        # e.SURVIVED_ROUND: 500,
-        # e.SURVIVED_BOMB: 25,
-        #e.MOVED_TOWARDS_CRATE: 35,
-        e.RETURN_TO_PREVIOUS_POS: -25,
-        #e.MOVED_AWAY_FROM_CRATE: -35
-        # PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
-    }
-
-
     # game_rewards = {
     #     e.COIN_COLLECTED: 100,
-    #     e.KILLED_OPPONENT: 500,
+    #     # e.KILLED_OPPONENT: 500,
     #     e.INVALID_ACTION: -25,
-    #     #e.WAITED: -5,
+    #     # e.WAITED: -5,
     #     e.WAITED: -15,
     #     e.MOVED_UP: -15,
     #     e.MOVED_DOWN: -15,
@@ -340,18 +313,45 @@ def reward_from_events(self, events: List[str]) -> int:
     #     e.COIN_FOUND: 50,
     #     e.CRATE_DESTROYED: 25,
     #     e.BOMB_DROPPED: 30,
-    #     e.BOMB_PLACED_AT_CRATE: 65,
-    #     e.BOMB_PLACED_BAD: -25,
-    #     #e.BOMB_EXPLODED: 10,
-    #     #e.GOT_KILLED: -50,
+    #     #e.BOMB_PLACED_AT_CRATE: 65,
+    #     #e.BOMB_PLACED_BAD: -25,
+    #     # e.BOMB_EXPLODED: 10,
+    #     # e.GOT_KILLED: -50,
     #     e.KILLED_SELF: -300,
-    #     #e.SURVIVED_ROUND: 500,
-    #     #e.SURVIVED_BOMB: 25,
-    #     e.MOVED_TOWARDS_CRATE: 35,
+    #     # e.SURVIVED_ROUND: 500,
+    #     # e.SURVIVED_BOMB: 25,
+    #     #e.MOVED_TOWARDS_CRATE: 35,
     #     e.RETURN_TO_PREVIOUS_POS: -25,
-    #     e.MOVED_AWAY_FROM_CRATE: -35
-    #     #PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
+    #     #e.MOVED_AWAY_FROM_CRATE: -35
+    #     # PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
     # }
+
+
+    game_rewards = {
+        e.COIN_COLLECTED: 100,
+        e.KILLED_OPPONENT: 500,
+        e.INVALID_ACTION: -25,
+        #e.WAITED: -5,
+        e.WAITED: -15,
+        e.MOVED_UP: -15,
+        e.MOVED_DOWN: -15,
+        e.MOVED_LEFT: -15,
+        e.MOVED_RIGHT: -15,
+        e.COIN_FOUND: 50,
+        e.CRATE_DESTROYED: 25,
+        e.BOMB_DROPPED: 30,
+        e.BOMB_PLACED_AT_CRATE: 65,
+        e.BOMB_PLACED_BAD: -25,
+        #e.BOMB_EXPLODED: 10,
+        #e.GOT_KILLED: -50,
+        e.KILLED_SELF: -300,
+        e.SURVIVED_ROUND: 100,
+        #e.SURVIVED_BOMB: 25,
+        e.MOVED_TOWARDS_CRATE: 35,
+        e.RETURN_TO_PREVIOUS_POS: -25,
+        e.MOVED_AWAY_FROM_CRATE: -35
+        #PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
+    }
     reward_sum = 0
     for event in events:
         if event in game_rewards:

@@ -46,4 +46,11 @@ and third column for right), after first two rows for up, second two rows for do
 
  10cont -> continue 10 at ~45k
 
+ 10 cont with two peacefull agents and one random -> 10cont used against agents, training continued
+
+ 10 cont with two peacefull agents and one random with bombs and crates optimized:
+    - bombs -> distance to the center of the bomb included in the bomb_ch feature (multiplied with 3,2,1)
+    - field_ch feature -> modify nearest crate if crate placed on the side (diagonal in the 3x3 + in the next 4 steps is a way (0) and
+    fifth position is a crate) -> this is a trap and there should not be placed a bomb
+
 
