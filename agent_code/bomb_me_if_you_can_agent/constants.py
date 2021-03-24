@@ -1,5 +1,5 @@
 AMOUNT_OF_TRAINING_EPISODES = 100000
-NAME_OF_FILES = 'crate_expand_model_crates_action'
+NAME_OF_FILES = 'crate_expand_model_crates_action_bomb'
 
 # Hyper parameters
 TRANSITION_HISTORY_SIZE = 10000  # keep only ... last transitions
@@ -7,7 +7,7 @@ RECORD_ENEMY_TRANSITIONS = 1.0  # record enemy transitions with probability ...
 
 BATCH_SIZE = 128
 GAMMA = 0.9
-EPS = 0.9
+EPS = 0.2
 EPS_END = 0.05
 EPS_DECAY = 10000
 TARGET_UPDATE = 10

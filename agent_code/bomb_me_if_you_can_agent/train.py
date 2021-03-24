@@ -68,10 +68,10 @@ def setup_training(self):
     plt.suptitle('Q-Net Training')
 
     # Pre Training:
-    load_training_data(self)
-    for i in range(100):
-        print('Pre Training Round: '+str(i))
-        train_neural_network(self)
+    # load_training_data(self)
+    # for i in range(100):
+    #     print('Pre Training Round: '+str(i))
+    #     train_neural_network(self)
 
 
 def game_events_occurred(self, old_game_state: dict, self_action: str, next_game_state: dict, events: List[str]):
@@ -198,9 +198,9 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
         print()
 
     # Increase Steps per Round after particular Episodes
-    if constants.ROUNDS_NR % constants.INCREASE_STEPS_AFTER_EPISODES == 0 and s.MAX_STEPS < 400:
-        s.MAX_STEPS = s.MAX_STEPS + constants.INCREASE_STEP_VALUE
-    constants.ROUNDS_NR = constants.ROUNDS_NR +1
+    # if constants.ROUNDS_NR % constants.INCREASE_STEPS_AFTER_EPISODES == 0 and s.MAX_STEPS < 400:
+    #     s.MAX_STEPS = s.MAX_STEPS + constants.INCREASE_STEP_VALUE
+    # constants.ROUNDS_NR = constants.ROUNDS_NR +1
 
     print()
     print('Epsilon: ' + str(constants.EPS))
@@ -221,8 +221,8 @@ def reward_from_events(self, events: List[str]) -> int:
     certain behavior.
     """
     game_rewards = {
-        e.COIN_COLLECTED: 0.5,
-        e.KILLED_OPPONENT: 0.7,
+        e.COIN_COLLECTED: 0.7,
+        e.KILLED_OPPONENT: 0.85,
         e.INVALID_ACTION: -0.9,  # macht es sinn invalide aktionen zu bestrafen?
         e.COIN_FOUND: 0.01,
         e.CRATE_DESTROYED: 0.15,

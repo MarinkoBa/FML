@@ -24,10 +24,10 @@ def setup(self):
 
     :param self: This object is passed to all callbacks and you can set arbitrary values.
     """
-    if self.train or not os.path.isfile("coin_based_model.pt"):
+    if self.train or not os.path.isfile("crate_expand_model_crates_action.pt"):
         self.logger.info("Setting up model from scratch.")
 
-        with open("coin_based_model.pt", "rb") as file:
+        with open("crate_expand_model_crates_action.pt", "rb") as file:
             self.target_model = pickle.load(file)
         self.target_model.cuda()
         self.training_model = self.target_model

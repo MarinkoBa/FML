@@ -33,10 +33,11 @@ def features_3x3_space(game_state):
                 right_steps = right_steps + 1
 
     actions = np.asarray([up_steps, down_steps, left_steps, right_steps])
+    bomb_possible = int(game_state.get('self')[2] == True)
 
     # find_3 neighbours_values delivers an array in the form [up,down,left,right]
     free_dir = find_3neighbor_values(self_coord=own_pos, field_ch=field)
-    free_dir = [[up_steps, free_dir[0], down_steps], [free_dir[2], 0, free_dir[3]],
+    free_dir = [[up_steps, free_dir[0], down_steps], [free_dir[2], bomb_possible, free_dir[3]],
                 [left_steps, free_dir[1], right_steps]]
 
     # initialize field new
