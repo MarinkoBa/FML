@@ -208,9 +208,9 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
 
     # Store the model
-    with open(constants.NAME_OF_FILES + ".pt", "wb") as file:
-        pickle.dump(self.training_model.cpu(), file)
-    self.training_model.cuda()
+    # with open(constants.NAME_OF_FILES + ".pt", "wb") as file:
+    #     pickle.dump(self.training_model.cpu(), file)
+    # self.training_model.cuda()
 
 
 def reward_from_events(self, events: List[str]) -> int:

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="push coin_based_model">
+    <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="ready to train with crates 2.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,7 +45,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
@@ -193,7 +194,14 @@
       <option name="project" value="LOCAL" />
       <updated>1616458114499</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="ready to train with crates 2.">
+      <created>1616540314844</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1616540314844</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -240,16 +248,12 @@
     <MESSAGE value="added enemy feature" />
     <MESSAGE value="load model also in training mode" />
     <MESSAGE value="push coin_based_model" />
-    <option name="LAST_COMMIT_MESSAGE" value="push coin_based_model" />
+    <MESSAGE value="ready to train with crates 2." />
+    <option name="LAST_COMMIT_MESSAGE" value="ready to train with crates 2." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py</url>
-          <line>141</line>
-          <option name="timeStamp" value="101" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py</url>
           <line>317</line>
@@ -268,12 +272,7 @@
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py</url>
           <line>233</line>
-          <option name="timeStamp" value="112" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py</url>
-          <line>241</line>
-          <option name="timeStamp" value="113" />
+          <option name="timeStamp" value="115" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

@@ -32,13 +32,13 @@ def features_3x3_space(game_state):
             elif field[own_pos[1], own_pos[0] + i] == 0:
                 right_steps = right_steps + 1
 
-    actions = np.asarray([[0, up_steps - 1, 0], [left_steps - 1, 0, right_steps - 1], [0, down_steps - 1, 0]])
+    actions = np.asarray([up_steps ,down_steps,left_steps, right_steps])
 
 
 
     # find_3 neighbours_values delivers an array in the form [up,down,left,right]
     free_dir = find_3neighbor_values(self_coord=own_pos,field_ch=field)
-    free_dir = [[0,free_dir[0],0],[free_dir[2],0,free_dir[3]],[0,free_dir[1],0]]
+    free_dir = [[up_steps,free_dir[0],down_steps],[free_dir[2],0,free_dir[3]],[left_steps,free_dir[1],right_steps]]
 
     # initialize field new
     field = game_state.get('field').T
@@ -98,7 +98,7 @@ def features_3x3_space(game_state):
     up, down, left, right = True, True, True, True
     if len(bombs) > 0:
         for bomb in bombs:
-            bomb_timer = bomb[1]
+            bomb_timer = bomb[1] + 3
             bomb_field[bomb[0][1], bomb[0][0]] = bomb_timer
 
             for i in range(settings.BOMB_POWER + 1):
@@ -116,13 +116,13 @@ def features_3x3_space(game_state):
                         left = False
 
                 if up:
-                    bomb_field[bomb[0][1] + i, bomb[0][0]] = bomb_timer
+                    bomb_field[bomb[0][1] + i, bomb[0][0]] = bomb_timer -i
                 if down:
-                    bomb_field[bomb[0][1] - i, bomb[0][0]] = bomb_timer
+                    bomb_field[bomb[0][1] - i, bomb[0][0]] = bomb_timer -i
                 if right:
-                    bomb_field[bomb[0][1], bomb[0][0] + i] = bomb_timer
+                    bomb_field[bomb[0][1], bomb[0][0] + i] = bomb_timer -i
                 if left:
-                    bomb_field[bomb[0][1], bomb[0][0] - i] = bomb_timer
+                    bomb_field[bomb[0][1], bomb[0][0] - i] = bomb_timer -i
 
     # Get 3x3 part from the bomb_field
     down, up, left, left_up, left_down, right, right_up, right_down = 0, 0, 0, 0, 0, 0, 0, 0
