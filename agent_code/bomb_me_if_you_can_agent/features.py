@@ -32,13 +32,12 @@ def features_3x3_space(game_state):
             elif field[own_pos[1], own_pos[0] + i] == 0:
                 right_steps = right_steps + 1
 
-    actions = np.asarray([up_steps ,down_steps,left_steps, right_steps])
-
-
+    actions = np.asarray([up_steps, down_steps, left_steps, right_steps])
 
     # find_3 neighbours_values delivers an array in the form [up,down,left,right]
-    free_dir = find_3neighbor_values(self_coord=own_pos,field_ch=field)
-    free_dir = [[up_steps,free_dir[0],down_steps],[free_dir[2],0,free_dir[3]],[left_steps,free_dir[1],right_steps]]
+    free_dir = find_3neighbor_values(self_coord=own_pos, field_ch=field)
+    free_dir = [[up_steps, free_dir[0], down_steps], [free_dir[2], 0, free_dir[3]],
+                [left_steps, free_dir[1], right_steps]]
 
     # initialize field new
     field = game_state.get('field').T
@@ -87,8 +86,6 @@ def features_3x3_space(game_state):
     mask = coins == 1
     coins[mask] = nearest_coin_dist
 
-
-
     # calculate explosion of bombs
     field = game_state.get('field').T
     bombs = game_state.get('bombs')
@@ -116,13 +113,13 @@ def features_3x3_space(game_state):
                         left = False
 
                 if up:
-                    bomb_field[bomb[0][1] + i, bomb[0][0]] = bomb_timer -i
+                    bomb_field[bomb[0][1] + i, bomb[0][0]] = bomb_timer
                 if down:
-                    bomb_field[bomb[0][1] - i, bomb[0][0]] = bomb_timer -i
+                    bomb_field[bomb[0][1] - i, bomb[0][0]] = bomb_timer
                 if right:
-                    bomb_field[bomb[0][1], bomb[0][0] + i] = bomb_timer -i
+                    bomb_field[bomb[0][1], bomb[0][0] + i] = bomb_timer
                 if left:
-                    bomb_field[bomb[0][1], bomb[0][0] - i] = bomb_timer -i
+                    bomb_field[bomb[0][1], bomb[0][0] - i] = bomb_timer
 
     # Get 3x3 part from the bomb_field
     down, up, left, left_up, left_down, right, right_up, right_down = 0, 0, 0, 0, 0, 0, 0, 0
@@ -139,7 +136,6 @@ def features_3x3_space(game_state):
     right = bomb_field[own_pos[1], own_pos[0] + 1]
 
     bombs = np.asarray([[up_left, up, up_right], [left, middle, right], [down_left, down, down_right]])
-
 
     # Get 3x3 Info About crates
     field = game_state.get('field').T
@@ -232,7 +228,7 @@ def features_3x3_space(game_state):
 
     # transform np-arrays to tensors
     free_dir = torch.tensor(free_dir).double()
-    crates = torch.tensor(nearest_crates).double()
+    crates = torch.tensor(crates).double()  # crates instead of nearest crates to give model more information
     bombs = torch.tensor(bombs).double()
     coins = torch.tensor(coins).double()
     actions = torch.tensor(actions).double()
@@ -314,9 +310,8 @@ def feature_field(game_state):
     # bombs = get_7x7_submatrix(bomb_field,self_coord)
     # coins = get_7x7_submatrix(coins,self_coord)
 
-
     field = torch.tensor(field).double()
-    #self = torch.tensor(self).double()
+    # self = torch.tensor(self).double()
     others = torch.tensor(other_field).double()
     bombs = torch.tensor(bomb_field).double()
     coins = torch.tensor(coins).double()
@@ -329,7 +324,8 @@ def feature_field(game_state):
 
     return tensor_ch
 
-def get_7x7_submatrix(field,self_coord):
+
+def get_7x7_submatrix(field, self_coord):
     # create only 7x7 subfield from 17x17
     #
     # Expand 17x17 matrix to 19x19
@@ -366,21 +362,21 @@ def find_3neighbor_values(self_coord, field_ch):
     up_right_right = (up_right[0] + 1, up_right[1])
 
     up_list_coord = [up,
-               up_up, up_left, up_right,
-               up_up_up, up_up_left, up_up_right,
-               up_left_up, up_left_down, up_left_left,
-               up_right_up, up_right_down, up_right_right]
+                     up_up, up_left, up_right,
+                     up_up_up, up_up_left, up_up_right,
+                     up_left_up, up_left_down, up_left_left,
+                     up_right_up, up_right_down, up_right_right]
 
     up_list = np.ones(len(up_list_coord)) * 5
 
-    if(field_ch[up_list_coord[0][1], up_list_coord[0][0]] != 0):
+    if (field_ch[up_list_coord[0][1], up_list_coord[0][0]] != 0):
         up_list = np.ones(len(up_list_coord))
     else:
-        if(field_ch[up_list_coord[1][1], up_list_coord[1][0]] != 0):
-            up_list[1]=1
-            up_list[4]=1
-            up_list[5]=1
-            up_list[6]=1
+        if (field_ch[up_list_coord[1][1], up_list_coord[1][0]] != 0):
+            up_list[1] = 1
+            up_list[4] = 1
+            up_list[5] = 1
+            up_list[6] = 1
         if (field_ch[up_list_coord[2][1], up_list_coord[2][0]] != 0):
             up_list[2] = 1
             up_list[7] = 1
@@ -391,7 +387,6 @@ def find_3neighbor_values(self_coord, field_ch):
             up_list[10] = 1
             up_list[11] = 1
             up_list[12] = 1
-
 
     down = (self_coord[0], self_coord[1] + 1)
 
@@ -412,18 +407,17 @@ def find_3neighbor_values(self_coord, field_ch):
     down_right_right = (down_right[0] + 1, down_right[1])
 
     down_list_coord = [down,
-               down_down, down_left, down_right,
-               down_down_down, down_down_left, down_down_right,
-               down_left_up, down_left_down, down_left_left,
-               down_right_up, down_right_down, down_right_right]
+                       down_down, down_left, down_right,
+                       down_down_down, down_down_left, down_down_right,
+                       down_left_up, down_left_down, down_left_left,
+                       down_right_up, down_right_down, down_right_right]
 
     down_list = np.ones(len(down_list_coord)) * 5
 
-    if(field_ch[down_list_coord[0][1], down_list_coord[0][0]] != 0):
+    if (field_ch[down_list_coord[0][1], down_list_coord[0][0]] != 0):
         down_list = np.ones(len(down_list_coord))
     else:
-        if(field_ch[down_list_coord[1][1], down_list_coord[1][0]] != 0):
-
+        if (field_ch[down_list_coord[1][1], down_list_coord[1][0]] != 0):
             down_list[1] = 1
             down_list[4] = 1
             down_list[5] = 1
@@ -438,8 +432,6 @@ def find_3neighbor_values(self_coord, field_ch):
             down_list[10] = 1
             down_list[11] = 1
             down_list[12] = 1
-
-
 
     left = (self_coord[0] - 1, self_coord[1])
 
@@ -460,18 +452,17 @@ def find_3neighbor_values(self_coord, field_ch):
     left_up_right = (left_up[0] + 1, left_up[1])
 
     left_list_coord = [left,
-                 left_down, left_left, left_up,
-                 left_down_down, left_down_left, left_down_right,
-                 left_left_up, left_left_down, left_left_left,
-                 left_up_up, left_up_left, left_up_right]
-
+                       left_down, left_left, left_up,
+                       left_down_down, left_down_left, left_down_right,
+                       left_left_up, left_left_down, left_left_left,
+                       left_up_up, left_up_left, left_up_right]
 
     left_list = np.ones(len(left_list_coord)) * 5
 
-    if(field_ch[left_list_coord[0][1], left_list_coord[0][0]] != 0):
+    if (field_ch[left_list_coord[0][1], left_list_coord[0][0]] != 0):
         left_list = np.ones(len(left_list_coord))
     else:
-        if(field_ch[left_list_coord[1][1], left_list_coord[1][0]] != 0):
+        if (field_ch[left_list_coord[1][1], left_list_coord[1][0]] != 0):
             left_list[1] = 1
             left_list[4] = 1
             left_list[5] = 1
@@ -505,20 +496,18 @@ def find_3neighbor_values(self_coord, field_ch):
     right_up_left = (right_up[0] - 1, right_up[1])
     right_up_right = (right_up[0] + 1, right_up[1])
 
-
     right_list_coord = [right,
-                 right_down, right_right, right_up,
-                 right_down_down, right_down_left, right_down_right,
-                 right_right_up, right_right_down, right_right_right,
-                 right_up_up, right_up_left, right_up_right]
-
+                        right_down, right_right, right_up,
+                        right_down_down, right_down_left, right_down_right,
+                        right_right_up, right_right_down, right_right_right,
+                        right_up_up, right_up_left, right_up_right]
 
     right_list = np.ones(len(right_list_coord)) * 5
 
-    if(field_ch[right_list_coord[0][1], right_list_coord[0][0]] != 0):
+    if (field_ch[right_list_coord[0][1], right_list_coord[0][0]] != 0):
         right_list = np.ones(len(right_list_coord))
     else:
-        if(field_ch[right_list_coord[1][1], right_list_coord[1][0]] != 0):
+        if (field_ch[right_list_coord[1][1], right_list_coord[1][0]] != 0):
             right_list[1] = 1
             right_list[4] = 1
             right_list[5] = 1
@@ -543,15 +532,14 @@ def find_3neighbor_values(self_coord, field_ch):
 
         duplicate_tuple = up_list_coord[duplicates_up_list[i]]
         ind_to_check = [i for i, tupl in enumerate(up_list_coord) if tupl == duplicate_tuple]
-        if(up_list[ind_to_check[0]] == 1 and up_list[ind_to_check[1]] == 1):
+        if (up_list[ind_to_check[0]] == 1 and up_list[ind_to_check[1]] == 1):
             up_list[ind_to_check[1]] = 1
-        if(up_list[ind_to_check[0]] == 5 and up_list[ind_to_check[1]] == 1):
+        if (up_list[ind_to_check[0]] == 5 and up_list[ind_to_check[1]] == 1):
             up_list[ind_to_check[1]] = 1
         if (up_list[ind_to_check[1]] == 5 and up_list[ind_to_check[0]] == 1):
             up_list[ind_to_check[0]] = 1
         if (up_list[ind_to_check[1]] == 5 and up_list[ind_to_check[0]] == 5):
             up_list[ind_to_check[1]] = 1
-
 
     for j in range(len(duplicates_down_list)):
 
@@ -572,7 +560,7 @@ def find_3neighbor_values(self_coord, field_ch):
         duplicate_tuple = left_list_coord[duplicates_left_list[k]]
         ind_to_check = [i for i, tupl in enumerate(left_list_coord) if tupl == duplicate_tuple]
 
-        if  (left_list[ind_to_check[0]] == 1 and left_list[ind_to_check[1]] == 1):
+        if (left_list[ind_to_check[0]] == 1 and left_list[ind_to_check[1]] == 1):
             left_list[ind_to_check[1]] = 1
         if (left_list[ind_to_check[0]] == 5 and left_list[ind_to_check[1]] == 1):
             left_list[ind_to_check[1]] = 1
@@ -580,7 +568,6 @@ def find_3neighbor_values(self_coord, field_ch):
             left_list[ind_to_check[0]] = 1
         if (left_list[ind_to_check[1]] == 5 and left_list[ind_to_check[0]] == 5):
             left_list[ind_to_check[1]] = 1
-
 
     for l in range(len(duplicates_right_list)):
 
@@ -596,7 +583,6 @@ def find_3neighbor_values(self_coord, field_ch):
         if (right_list[ind_to_check[1]] == 5 and right_list[ind_to_check[0]] == 5):
             right_list[ind_to_check[1]] = 1
 
-
     list_of_lists_coord = [up_list_coord, down_list_coord, left_list_coord, right_list_coord]
     list_of_lists_val = [up_list, down_list, left_list, right_list]
 
@@ -605,8 +591,11 @@ def find_3neighbor_values(self_coord, field_ch):
     for i in range(len(list_of_lists_coord)):
         counter = 0
         for j in range(len(list_of_lists_coord[i])):
-            if((list_of_lists_coord[i][j][1] >= 1 and list_of_lists_coord[i][j][1] <= 15 and list_of_lists_coord[i][j][0] >= 1 and list_of_lists_coord[i][j][0] <= 15) and (field_ch[list_of_lists_coord[i][j][1],list_of_lists_coord[i][j][0]] == 0) and (list_of_lists_val[i][j] == 5)):
-                counter+=1
+            if ((list_of_lists_coord[i][j][1] >= 1 and list_of_lists_coord[i][j][1] <= 15 and list_of_lists_coord[i][j][
+                0] >= 1 and list_of_lists_coord[i][j][0] <= 15) and (
+                    field_ch[list_of_lists_coord[i][j][1], list_of_lists_coord[i][j][0]] == 0) and (
+                    list_of_lists_val[i][j] == 5)):
+                counter += 1
         final_res.append(counter)
 
     return final_res
