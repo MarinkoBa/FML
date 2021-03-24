@@ -26,36 +26,36 @@ def setup(self):
 
     :param self: This object is passed to all callbacks and you can set arbitrary values.
     """
-    if self.train or not os.path.isfile("10cont_with_two_peacefull_agents_and_one_random.pt"):
+    if self.train or not os.path.isfile("10_3_newly_trained.pt"):
         self.logger.info("Setting up model from scratch.")
 
-        #self.trainings_model = Q_Net()
-        #self.trainings_model.cuda(0)
-        #self.trainings_model.train()
-        #self.trainings_model.double()
-
-        #self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.0001)
-        #self.criterion = nn.SmoothL1Loss()
-        #self.criterion.cuda(0)
-
-        #self.target_model = Q_Net()
-        #self.target_model.cuda(0)
-        #self.target_model.double()
-
-        with open("10cont_with_two_peacefull_agents_and_one_random.pt", "rb") as file:
-            self.trainings_model = pickle.load(file)
-
-        with open("10cont_with_two_peacefull_agents_and_one_random.pt", "rb") as file:
-            self.target_model = pickle.load(file)
+        self.trainings_model = Q_Net()
+        self.trainings_model.cuda(0)
+        self.trainings_model.train()
+        self.trainings_model.double()
 
         self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.0001)
         self.criterion = nn.SmoothL1Loss()
         self.criterion.cuda(0)
 
+        self.target_model = Q_Net()
+        self.target_model.cuda(0)
+        self.target_model.double()
+
+        # with open("99cont_crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt", "rb") as file:
+        #     self.trainings_model = pickle.load(file)
+        #
+        # with open("99cont_crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt", "rb") as file:
+        #     self.target_model = pickle.load(file)
+        #
+        # self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.0001)
+        # self.criterion = nn.SmoothL1Loss()
+        # self.criterion.cuda(0)
+
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
-        with open("10cont_with_two_peacefull_agents_and_one_random.pt", "rb") as file:
+        with open("10_3_newly_trained.pt", "rb") as file:
             self.trainings_model = pickle.load(file)
 
 def act(self, game_state: dict) -> str:
@@ -372,6 +372,20 @@ def state_to_features(game_state: dict) -> np.array:
             self_coord[1], right_three] == 0 and fiel[self_coord[1], right_four] == 0 and fiel[
             self_coord[1], right_five] == 1):
             field_ch[1][2] = 300
+
+    if (np.count_nonzero(bombs_ch == 255)<9):
+        for b in bombs:
+            fiel[b[0][1], b[0][0]] = 1
+        fiel_self_coord = fiel[self_coord[1] - 1:self_coord[1] + 2, self_coord[0] - 1:self_coord[0] + 2]
+        # field_ch[field_ch > 150]=10
+        co = np.argwhere(field_ch > 150)
+        for i in range(len(co)):
+            if (field_ch[co[i][0], co[i][1]] > 150 and fiel_self_coord[co[i][0], co[i][1]] == 1):
+                field_ch[co[i][0], co[i][1]] = 10
+
+    bomb_possible = game_state.get('self')[2]
+    if not bomb_possible:
+        field_ch[1][1] = 0
 
     field_ch_ten = torch.from_numpy(field_ch).double()
     bombs_ch_ten = torch.from_numpy(bombs_ch).double()
