@@ -1,5 +1,5 @@
 AMOUNT_OF_TRAINING_EPISODES = 100000
-NAME_OF_FILES = 'crate_expand_model_crates_action_bomb'
+NAME_OF_FILES = 'crate_expand_model_crates_multidirection'
 
 # Hyper parameters
 TRANSITION_HISTORY_SIZE = 10000  # keep only ... last transitions

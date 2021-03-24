@@ -50,7 +50,7 @@ def setup(self):
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
-        with open("coin_based_model.pt", "rb") as file:
+        with open("crate_expand_model_crates_action.pt", "rb") as file:
             self.target_model = pickle.load(file)
         self.target_model.cuda()
 

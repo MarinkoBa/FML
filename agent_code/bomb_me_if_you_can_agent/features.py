@@ -176,13 +176,45 @@ def features_3x3_space(game_state):
                 right = False
                 right_steps = i
 
-    crates = np.asarray([[0, up_steps, 0], [left_steps, 0, right_steps], [0, down_steps, 0]])
-    mask = crates == 0
-    crates[mask] = 100
-    nearest_crate_index = np.unravel_index(crates.argmin(), crates.shape)
-    nearest_crates = np.zeros_like(crates)
-    nearest_crates[nearest_crate_index[0], nearest_crate_index[1]] = crates[
-        nearest_crate_index[0], nearest_crate_index[1]]
+
+    # mask = crates == 0
+    # crates[mask] = 100
+    # nearest_crate_index = np.unravel_index(crates.argmin(), crates.shape)
+    # nearest_crates = np.zeros_like(crates)
+    # nearest_crates[nearest_crate_index[0], nearest_crate_index[1]] = crates[
+    #     nearest_crate_index[0], nearest_crate_index[1]]
+
+    # additional nearest crate orientation
+    down, up, left, left_up, left_down, right, right_up, right_down = 0, 0, 0, 0, 0, 0, 0, 0
+    crates_tupels = np.where(field == 1)
+    crates_tupels = list(zip(crates_tupels[1], crates_tupels[0]))
+    man_dis = []
+    if len(crates_tupels) > 0:
+        for c in crates_tupels:
+            # determine manhattan distance to each coin on field
+            man_dis.append(distance.cityblock([own_pos[1], own_pos[0]], [c[1], c[0]]))
+
+    nearest_crate_dist = 0
+
+    if len(man_dis) > 0:
+        # select coin with shortest distance
+        nearest_crate = np.argmin(man_dis)
+        nearest_crate_dist = man_dis[nearest_crate]
+        nearest_crate_pos = crates_tupels[nearest_crate]
+
+        # Determine Orientation of coin
+        if not own_pos[1] == nearest_crate_pos[1] and not own_pos[0] == nearest_crate_pos[0]:
+
+            if own_pos[0] < nearest_crate_pos[0] and own_pos[1] < nearest_crate_pos[1]:
+                right_down = nearest_crate_dist
+            elif own_pos[0] < nearest_crate_pos[0] and own_pos[1] > nearest_crate_pos[1]:
+                right_up = nearest_crate_dist
+            elif own_pos[0] > nearest_crate_pos[0] and own_pos[1] > nearest_crate_pos[1]:
+                left_up = nearest_crate_dist
+            elif own_pos[0] > nearest_crate_pos[0] and own_pos[1] < nearest_crate_pos[1]:
+                left_down = nearest_crate_dist
+
+    crates = np.asarray([[left_up, up_steps, right_up], [left_steps, 0, right_steps], [left_down, down_steps, right_down]])
 
     # feature enemies
     # get orientation of nearest_coin
