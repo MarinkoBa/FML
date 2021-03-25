@@ -198,9 +198,9 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
         print()
 
     # Increase Steps per Round after particular Episodes
-    # if constants.ROUNDS_NR % constants.INCREASE_STEPS_AFTER_EPISODES == 0 and s.MAX_STEPS < 400:
-    #     s.MAX_STEPS = s.MAX_STEPS + constants.INCREASE_STEP_VALUE
-    # constants.ROUNDS_NR = constants.ROUNDS_NR +1
+    if constants.ROUNDS_NR % constants.INCREASE_STEPS_AFTER_EPISODES == 0 and s.MAX_STEPS < 400:
+        s.MAX_STEPS = s.MAX_STEPS + constants.INCREASE_STEP_VALUE
+    constants.ROUNDS_NR = constants.ROUNDS_NR +1
 
     print()
     print('Epsilon: ' + str(constants.EPS))
@@ -221,25 +221,25 @@ def reward_from_events(self, events: List[str]) -> int:
     certain behavior.
     """
     game_rewards = {
-        e.COIN_COLLECTED: 0.7,
-        e.KILLED_OPPONENT: 0.85,
+        e.COIN_COLLECTED: 0.8,
+        e.KILLED_OPPONENT: 0.95,
         e.INVALID_ACTION: -0.9,  # macht es sinn invalide aktionen zu bestrafen?
         e.COIN_FOUND: 0.01,
-        e.CRATE_DESTROYED: 0.15,
-        e.GOT_KILLED: -0.80,
+        e.CRATE_DESTROYED: 0.3,
+        e.GOT_KILLED: -0.90,
         e.KILLED_SELF: -1,
         e.SURVIVED_ROUND: 0.8,
-        e.OPPONENT_ELIMINATED: 0.1,  # nicht durch unsern agent direkt gekillt
+        e.OPPONENT_ELIMINATED: 0.05,  # nicht durch unsern agent direkt gekillt
         e.BOMB_DROPPED: 0,
         e.BOMB_EXPLODED: 0,
         e.SURVIVED_BOMB: 0.1,
         e.PLACED_BOMB_FIRST_STEP: -0.7,  # Bomb in first step, is at all time bad
-        e.MOVED_UP: -0.05,
-        e.MOVED_DOWN: -0.05,
-        e.MOVED_LEFT: -0.05,
-        e.MOVED_RIGHT: -0.05,
+        e.MOVED_UP: -0.1,
+        e.MOVED_DOWN: -0.1,
+        e.MOVED_LEFT: -0.1,
+        e.MOVED_RIGHT: -0.1,
         e.WAITED: -0.4,
-        e.BOMB_PLACED_AT_CRATE: 0.2,
+        e.BOMB_PLACED_AT_CRATE: 0.3,
         e.RETURN_TO_PREVIOUS_POS: -0.4
     }
     reward_sum = 0
@@ -288,4 +288,6 @@ def train_neural_network(self):
         loss = self.criterion(q_val_taken_actions, final_state_action_values.unsqueeze(1))
         self.optimizer.zero_grad()
         loss.backward()
+        for param in self.training_model.parameters():
+            param.grad.data.clamp_(-1, 1)
         self.optimizer.step()

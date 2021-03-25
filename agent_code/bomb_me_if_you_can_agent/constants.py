@@ -1,20 +1,19 @@
 AMOUNT_OF_TRAINING_EPISODES = 100000
-NAME_OF_FILES = 'crate_expand_model_crates_multidirection'
+NAME_OF_FILES = 'crates_multidirection_model'
 
 # Hyper parameters
 TRANSITION_HISTORY_SIZE = 10000  # keep only ... last transitions
 RECORD_ENEMY_TRANSITIONS = 1.0  # record enemy transitions with probability ...
 
-BATCH_SIZE = 128
-GAMMA = 0.9
-EPS = 0.2
-EPS_END = 0.05
+BATCH_SIZE = 64
+GAMMA = 0.999
+EPS = 1
+EPS_END = 0.02
 EPS_DECAY = 10000
-TARGET_UPDATE = 10
-LEARNING_RATE = 0.0001
+LEARNING_RATE = 0.001
 
 
-ROUNDS_MODEL_UPDATE = 5
+ROUNDS_MODEL_UPDATE = 25
 ROUNDS_NR = 1
 INCREASE_STEPS_AFTER_EPISODES = 5000
 INCREASE_STEP_VALUE = 100
