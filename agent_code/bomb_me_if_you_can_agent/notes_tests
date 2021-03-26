@@ -73,3 +73,31 @@ and third column for right), after first two rows for up, second two rows for do
    - add two hidden layer to the net
    - add rewards for got killed and survived bomb
    - against 2x peaceful and one rule based
+   - 20 steps start -> 10000episodes +10 steps
+
+12_newly:
+- -100wait
+- -100invalid
+
+122:
+- game rewards modified
+- 20 rounds -> target net update
+- 200 step start
+
+123:
+- game rewards modified
+- crate density 0.5
+- 3x peaceful
+
+
+13:
+- no ways in field_ch -> just 10 there, next crate (170-255), next coin (100-170) and next opposite agent (10-100) if in distance < 5
+- 20 steps -> all 10000 episodes +20
+
+
+14.
+- bomb repaired: behind wall no danger
+- 3x peaceful
+
+15.
+- crate dens 0.35

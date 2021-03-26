@@ -55,7 +55,7 @@ def setup_training(self):
     plt.title('Rewards training')
     plt.xlabel('Episode')
     plt.ylabel('Rewards')
-    plt.ylim([-1000, 1000])
+    plt.ylim([-2000, 2000])
     plt.ion()
     ax = plt.gca()
     ax.xaxis.set_major_formatter(tick.FuncFormatter(reformat_large_tick_values))
@@ -265,7 +265,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
         plt.subplot(122)
         plt.plot(self.rewards_list_game)
         plt.plot(np.arange(0, len(self.reward_mean_game)) * constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean_game)
-        plt.savefig('11newly_created.png')
+        plt.savefig('15.png')
 
 
     action = last_action
@@ -278,11 +278,11 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
     constants.ROUNDS_NR = constants.ROUNDS_NR + 1
 
-    if(constants.ROUNDS_NR%10 == 0):
+    if(constants.ROUNDS_NR%20 == 0):
         self.target_model.load_state_dict(self.trainings_model.state_dict())
 
     if constants.ROUNDS_NR%10000 == 0:
-        s.MAX_STEPS = s.MAX_STEPS + 10
+        s.MAX_STEPS = s.MAX_STEPS + 20
         constants.EPS = 0.9
         if s.MAX_STEPS >= 400:
             s.MAX_STEPS=400
@@ -296,7 +296,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
 
     # Store the model
-    with open("11newly_created.pt", "wb") as file:
+    with open("15.pt", "wb") as file:
         pickle.dump(self.trainings_model, file)
 
 
@@ -361,33 +361,33 @@ def reward_from_events(self, events: List[str]) -> int:
     # }
 
     game_rewards = {
-        e.WAITED: -15,
-        e.MOVED_UP: -15,
-        e.MOVED_DOWN: -15,
-        e.MOVED_LEFT: -15,
-        e.MOVED_RIGHT: -15,
+        e.WAITED: -100,
+        e.MOVED_UP: -55,
+        e.MOVED_DOWN: -55,
+        e.MOVED_LEFT: -55,
+        e.MOVED_RIGHT: -55,
 
-        e.INVALID_ACTION: -25,
+        e.INVALID_ACTION: -200,
 
-        e.COIN_COLLECTED: 100,
+        e.COIN_COLLECTED: 200,
         e.COIN_FOUND: 50,
 
         e.KILLED_OPPONENT: 500,
-        e.KILLED_SELF: -300,
+        e.KILLED_SELF: -400,
         e.SURVIVED_ROUND: 100,
         e.GOT_KILLED: -300,
-        e.SURVIVED_BOMB: 105,
+        e.SURVIVED_BOMB: 205,
 
-        e.CRATE_DESTROYED: 25,
+        e.CRATE_DESTROYED: 35,
 
-        e.BOMB_DROPPED: 30,
-        e.BOMB_PLACED_AT_CRATE: 65,
-        e.BOMB_PLACED_BAD: -25,
+        e.BOMB_DROPPED: 40,
+        e.BOMB_PLACED_AT_CRATE: 105,
+        e.BOMB_PLACED_BAD: -55,
 
 
-        e.MOVED_TOWARDS_CRATE: 35,
-        e.RETURN_TO_PREVIOUS_POS: -25,
-        e.MOVED_AWAY_FROM_CRATE: -35
+        e.MOVED_TOWARDS_CRATE: 85,
+        e.RETURN_TO_PREVIOUS_POS: -65,
+        e.MOVED_AWAY_FROM_CRATE: -50
         #PLACEHOLDER_EVENT: -.1  # idea: the custom event is bad
     }
 
