@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="ready to train with crates 2.">
+    <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="puah creates_expand_model_crates_action after 38k training">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/callbacks.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/callbacks.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/crate_expand_model_crates_action_plot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/crate_expand_model_crates_action.pt" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/crate_expand_model_crates_action.pt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/q_lin_network.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/q_lin_network.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/settings.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,7 +48,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
@@ -60,13 +62,13 @@
   </component>
   <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="FML_3" />
+      <module name="FML" />
       <option name="INTERPRETER_OPTIONS" value="-s" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="C:\Users\csi-se\anaconda3\envs\bombenv\python.exe" />
+      <option name="SDK_HOME" value="C:\Users\fabio\anaconda3\envs\bombenv\python.exe" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -83,7 +85,7 @@
         </ENTRIES>
       </EXTENSION>
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
-      <option name="PARAMETERS" value="play --agents bomb_me_if_you_can_agent --train 1 --no-gui" />
+      <option name="PARAMETERS" value="play --agents bomb_me_if_you_can_agent" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -111,6 +113,11 @@
       <workItem from="1616098754366" duration="3969000" />
       <workItem from="1616379344915" duration="1112000" />
       <workItem from="1616418828210" duration="3961000" />
+      <workItem from="1616715989153" duration="913000" />
+      <workItem from="1616719155376" duration="426000" />
+      <workItem from="1616720044581" duration="463000" />
+      <workItem from="1616721146332" duration="163000" />
+      <workItem from="1616722426041" duration="698000" />
     </task>
     <task id="LOCAL-00001" summary="added mean_reward plot">
       <created>1616168030463</created>
@@ -298,5 +305,8 @@
         <watch expression="crates" />
       </configuration>
     </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/FML$main.coverage" NAME="main Coverage Results" MODIFIED="1616722701240" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

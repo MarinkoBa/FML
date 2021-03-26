@@ -27,21 +27,21 @@ def setup(self):
     if self.train or not os.path.isfile("crate_expand_model_crates_action.pt"):
         self.logger.info("Setting up model from scratch.")
 
-        with open("crate_expand_model_crates_action.pt", "rb") as file:
-            self.target_model = pickle.load(file)
-        self.target_model.cuda()
-        self.training_model = self.target_model
-
-        # self.training_model = Q_Net()
-        # self.training_model.cuda(0)
-        # self.training_model.train()
-        # self.training_model.double()
-        #
-        # self.target_model = Q_Net()
+        # with open("crate_expand_model_crates_action.pt", "rb") as file:
+        #     self.target_model = pickle.load(file)
         # self.target_model.cuda()
-        # self.target_model.double()
-        # self.target_model.load_state_dict(self.training_model.state_dict())
-        # self.target_model.eval()
+        # self.training_model = self.target_model
+
+        self.training_model = Q_Net()
+        self.training_model.cuda(0)
+        self.training_model.train()
+        self.training_model.double()
+
+        self.target_model = Q_Net()
+        self.target_model.cuda()
+        self.target_model.double()
+        self.target_model.load_state_dict(self.training_model.state_dict())
+        self.target_model.eval()
 
         self.optimizer = torch.optim.Adam(params=self.training_model.parameters(), lr=constants.LEARNING_RATE)
         self.criterion = nn.SmoothL1Loss()
@@ -50,7 +50,7 @@ def setup(self):
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
-        with open("crate_expand_model_crates_action.pt", "rb") as file:
+        with open("5_layer_crate_destroyer.pt", "rb") as file:
             self.target_model = pickle.load(file)
         self.target_model.cuda()
 
