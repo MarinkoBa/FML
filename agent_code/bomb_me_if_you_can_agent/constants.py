@@ -1,5 +1,5 @@
 AMOUNT_OF_TRAINING_EPISODES = 100000
-NAME_OF_FILES = '5_layer_crate_destroyer'
+NAME_OF_FILES = '5_layer_crate_destroyer_train_rule_based'
 
 # Hyper parameters
 TRANSITION_HISTORY_SIZE = 10000  # keep only ... last transitions
@@ -9,7 +9,7 @@ BATCH_SIZE = 128
 GAMMA = 0.9
 EPS = 0.9
 EPS_END = 0.05
-EPS_DECAY = 10000
+EPS_DECAY = 1000
 TARGET_UPDATE = 10
 LEARNING_RATE = 0.0001
 
