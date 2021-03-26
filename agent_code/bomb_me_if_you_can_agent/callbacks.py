@@ -26,7 +26,7 @@ def setup(self):
 
     :param self: This object is passed to all callbacks and you can set arbitrary values.
     """
-    if self.train or not os.path.isfile("10_3_newly_trained.pt"):
+    if self.train or not os.path.isfile("11newly_created.pt"):
         self.logger.info("Setting up model from scratch.")
 
         self.trainings_model = Q_Net()
@@ -42,10 +42,10 @@ def setup(self):
         self.target_model.cuda(0)
         self.target_model.double()
 
-        # with open("99cont_crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt", "rb") as file:
+        # with open("10cont_with_two_peacefull_agents_and_one_random.pt", "rb") as file:
         #     self.trainings_model = pickle.load(file)
         #
-        # with open("99cont_crate_inv_act25_destr_cor_place_bomb_3step_bomb_where_upscal_lr0001_10steps.pt", "rb") as file:
+        # with open("10cont_with_two_peacefull_agents_and_one_random.pt", "rb") as file:
         #     self.target_model = pickle.load(file)
         #
         # self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.0001)
@@ -55,7 +55,7 @@ def setup(self):
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
-        with open("10_3_newly_trained.pt", "rb") as file:
+        with open("11newly_created.pt", "rb") as file:
             self.trainings_model = pickle.load(file)
 
 def act(self, game_state: dict) -> str:
@@ -215,7 +215,7 @@ def state_to_features(game_state: dict) -> np.array:
 
     if(min_dist==0):
         min_dist=1
-    coin_dist = 150 + int((105/min_dist))
+    coin_dist = 100 + int((70/min_dist))
 
     if (x_dist_min > 0 and y_dist_min > 0):
         field_ch[0][2] = coin_dist
@@ -257,11 +257,12 @@ def state_to_features(game_state: dict) -> np.array:
             x_dist_min_other_agent = others_arr[other_agent_ind][0] - self_coord[0]
             y_dist_min_other_agent = self_coord[1] - others_arr[other_agent_ind][1]
 
-    if(min_dist_other_agent!=1000):
+    #if(min_dist_other_agent!=1000):
+    if(min_dist_other_agent<=5):
         if (min_dist_other_agent == 0):
             min_dist_other_agent = 1
-        other_agent_dist = 150 + int((105 / min_dist_other_agent))
-        other_agent_dist = -other_agent_dist
+        other_agent_dist = 10 + int((90 / min_dist_other_agent))
+        other_agent_dist = other_agent_dist
 
         if (x_dist_min_other_agent > 0 and y_dist_min_other_agent > 0):
             field_ch[0][2] = other_agent_dist
@@ -299,7 +300,7 @@ def state_to_features(game_state: dict) -> np.array:
     if (min_dist_crate != 1000):
         if (min_dist_crate == 0):
             min_dist_crate = 1
-        crate_dist = 150 + int((105 / min_dist_crate))
+        crate_dist = 170 + int((85 / min_dist_crate))
 
         if (x_dist_min_crate > 0 and y_dist_min_crate > 0):
             field_ch[0][2] = crate_dist

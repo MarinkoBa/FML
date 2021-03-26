@@ -38,11 +38,11 @@ and third column for right), after first two rows for up, second two rows for do
 
  99 -> trained model from 9, training continued mit 10.
 
- 999 -> trained model from 99, training continued with 10 + oponents there in the field_ch -> minus value for nearest oponent, distance included.
+ 999 -> trained model from 99, training continued with 10 + oponents there in the field_ch -> minus value for nearest oponent, distance included. | abbruch
 
  99cont -> trained model from 99, training continued 99
 
- 99coins -> trained model from 99, training continued 99 with a goal to collect coins
+ 99coins -> trained model from 99, training continued 99 with a goal to collect coins | abbruch
 
  10cont -> continue 10 at ~45k
 
@@ -64,5 +64,12 @@ and third column for right), after first two rows for up, second two rows for do
     - means agent should not place another bomb until !=0
 
 10_3newly:
- - newest version newly trained
+ - newest version newly trained versus 2x peacefull and 1x rule based!
 
+11_newly:
+   - all 10000 steps EPS = 0.9
+   - field_ch -> 10-100 other agent, 100-170 coins, 170-255 crates
+   - all 10 rounds update target net
+   - add two hidden layer to the net
+   - add rewards for got killed and survived bomb
+   - against 2x peaceful and one rule based
