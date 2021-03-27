@@ -247,7 +247,8 @@ def features_3x3_space(game_state):
 
     enemies = np.asarray([[left_up, up, right_up], [left, 0, right], [left_down, down, right_down]])
 
-
+    exp_map = game_state['explosion_map'].T[own_pos[1] - 1:own_pos[1] + 2, own_pos[0] - 1:own_pos[0] + 2]
+    bombs[exp_map != 0] = 1
 
 # transform np-arrays to tensors
     free_dir = torch.tensor(free_dir).double()
