@@ -217,49 +217,39 @@ def features_3x3_space(game_state):
     crates = np.asarray([[left_up, up_steps, right_up], [left_steps, 0, right_steps], [left_down, down_steps, right_down]])
 
     # feature enemies
-    # get orientation of nearest_coin
+    # get orientation of enemies
     down, up, left, left_up, left_down, right, right_up, right_down = 0, 0, 0, 0, 0, 0, 0, 0
     enemies = game_state.get('others')
-    man_dis = []
-    if len(enemies) > 0:
-        for enemy in enemies:
-            field[enemy[3][1], enemy[3][0]] = 1
-            # determine manhattan distance to each coin on field
-            man_dis.append(distance.cityblock([own_pos[1], own_pos[0]], [enemy[3][1], enemy[3][0]]))
 
-    nearest_enemy_dist = 0
+    for enemy in enemies:
+        enemy_dist = distance.cityblock([own_pos[1], own_pos[0]], [enemy[3][1], enemy[3][0]])
+        enemy_pos = enemy[3]
 
-    if len(man_dis) > 0:
-        # select coin with shortest distance
-        nearest_enemy = np.argmin(man_dis)
-        nearest_enemy_dist = man_dis[nearest_enemy]
-        nearest_enemy_pos = enemies[nearest_enemy][3]
-
-        # Determine Orientation of coin
-        if own_pos[1] == nearest_enemy_pos[1]:
-            if own_pos[0] >= nearest_enemy_pos[0]:
-                left = 1
-            else:
-                right = 1
-        elif own_pos[0] == nearest_enemy_pos[0]:
-            if own_pos[1] >= nearest_enemy_pos[1]:
-                up = 1
-            else:
-                down = 1
-        elif own_pos[0] < nearest_enemy_pos[0] and own_pos[1] < nearest_enemy_pos[1]:
-            right_down = 1
-        elif own_pos[0] < nearest_enemy_pos[0] and own_pos[1] > nearest_enemy_pos[1]:
-            right_up = 1
-        elif own_pos[0] > nearest_enemy_pos[0] and own_pos[1] > nearest_enemy_pos[1]:
-            left_up = 1
-        elif own_pos[0] > nearest_enemy_pos[0] and own_pos[1] < nearest_enemy_pos[1]:
-            left_down = 1
+        # Determine Orientation of enemy
+        if own_pos[1] == enemy_pos[1]:
+            if own_pos[0] >= enemy_pos[0] and not left > enemy_dist:
+                left = enemy_dist
+            elif not right > enemy_dist:
+                right = enemy_dist
+        elif own_pos[0] == enemy_pos[0]:
+            if own_pos[1] >= enemy_pos[1] and not up > enemy_dist:
+                up = enemy_dist
+            elif not down > enemy_dist:
+                down = enemy_dist
+        elif own_pos[0] < enemy_pos[0] and own_pos[1] < enemy_pos[1] and not right_down > enemy_dist:
+            right_down = enemy_dist
+        elif own_pos[0] < enemy_pos[0] and own_pos[1] > enemy_pos[1] and not right_up > enemy_dist:
+            right_up = enemy_dist
+        elif own_pos[0] > enemy_pos[0] and own_pos[1] > enemy_pos[1] and not left_up > enemy_dist:
+            left_up = enemy_dist
+        elif own_pos[0] > enemy_pos[0] and own_pos[1] < enemy_pos[1] and not left_down > enemy_dist:
+            left_down = enemy_dist
 
     enemies = np.asarray([[left_up, up, right_up], [left, 0, right], [left_down, down, right_down]])
-    mask = enemies == 1
-    enemies[mask] = nearest_enemy_dist
 
-    # transform np-arrays to tensors
+
+
+# transform np-arrays to tensors
     free_dir = torch.tensor(free_dir).double()
     crates = torch.tensor(crates).double()  # crates instead of nearest crates to give model more information
     bombs = torch.tensor(bombs).double()

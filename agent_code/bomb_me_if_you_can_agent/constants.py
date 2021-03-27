@@ -1,5 +1,5 @@
 AMOUNT_OF_TRAINING_EPISODES = 100000
-NAME_OF_FILES = '5_layer_crate_destroyer_train_rule_based'
+NAME_OF_FILES = '5_layer_multi_enemy_destroyer_train_rule_based_decaybigger'
 
 # Hyper parameters
 TRANSITION_HISTORY_SIZE = 10000  # keep only ... last transitions
@@ -7,9 +7,9 @@ RECORD_ENEMY_TRANSITIONS = 1.0  # record enemy transitions with probability ...
 
 BATCH_SIZE = 128
 GAMMA = 0.9
-EPS = 0.9
+EPS = 1
 EPS_END = 0.05
-EPS_DECAY = 1000
+EPS_DECAY = 5000
 TARGET_UPDATE = 10
 LEARNING_RATE = 0.0001
 

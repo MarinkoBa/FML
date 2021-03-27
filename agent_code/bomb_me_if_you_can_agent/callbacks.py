@@ -60,7 +60,7 @@ def setup(self):
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
-        with open("5_layer_crate_destroyer_train_rule_based.pt", "rb") as file:
+        with open("5_layer_multi_enemy_destroyer_train_rule_based_decaybigger.pt", "rb") as file:
             self.target_model = pickle.load(file)
         self.target_model.cuda()
 
