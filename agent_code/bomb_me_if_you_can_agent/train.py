@@ -222,7 +222,7 @@ def reward_from_events(self, events: List[str]) -> int:
     """
     game_rewards = {
         e.COIN_COLLECTED: 0.7,
-        e.KILLED_OPPONENT: 0.85,
+        e.KILLED_OPPONENT: 0.4,
         e.INVALID_ACTION: -0.9,  # macht es sinn invalide aktionen zu bestrafen?
         e.COIN_FOUND: 0.01,
         e.CRATE_DESTROYED: 0.15,

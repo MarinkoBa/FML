@@ -1,5 +1,5 @@
 AMOUNT_OF_TRAINING_EPISODES = 100000
-NAME_OF_FILES = '5_layer_multi_enemy_destroyer_train_rule_based_decaybigger'
+NAME_OF_FILES = 'enemy_destroyer_model_1'
 
 # Hyper parameters
 TRANSITION_HISTORY_SIZE = 10000  # keep only ... last transitions
