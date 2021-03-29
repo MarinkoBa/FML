@@ -63,7 +63,7 @@ def setup(self):
         self.logger.info("Loading model from saved state.")
         with open("5_layer_multi_enemy_destroyer_train_rule_based_decaybigger.pt", "rb") as file:
             self.target_model = pickle.load(file)
-        self.target_model.cuda()
+       # self.target_model.cuda()
 
 
 def act(self, game_state: dict) -> str:
