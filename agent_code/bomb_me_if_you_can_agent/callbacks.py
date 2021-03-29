@@ -2,7 +2,6 @@ import os
 import pickle
 import random
 import copy
-import operator
 
 import numpy as np
 import torch
@@ -26,7 +25,7 @@ def setup(self):
 
     :param self: This object is passed to all callbacks and you can set arbitrary values.
     """
-    if self.train or not os.path.isfile("14.pt"):
+    if self.train or not os.path.isfile("B_M_I_Y_C_agent_cpu.pt"):
         self.logger.info("Setting up model from scratch.")
 
         self.trainings_model = Q_Net()
@@ -34,7 +33,7 @@ def setup(self):
         self.trainings_model.train()
         self.trainings_model.double()
 
-        self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.0001)
+        self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.001)
         self.criterion = nn.SmoothL1Loss()
         self.criterion.cuda(0)
 
@@ -42,21 +41,12 @@ def setup(self):
         self.target_model.cuda(0)
         self.target_model.double()
 
-        # with open("10cont_with_two_peacefull_agents_and_one_random.pt", "rb") as file:
-        #     self.trainings_model = pickle.load(file)
-        #
-        # with open("10cont_with_two_peacefull_agents_and_one_random.pt", "rb") as file:
-        #     self.target_model = pickle.load(file)
-        #
-        # self.optimizer = torch.optim.Adam(params=self.trainings_model.parameters(), lr=0.0001)
-        # self.criterion = nn.SmoothL1Loss()
-        # self.criterion.cuda(0)
-
         self.actions = constants.ACTIONS
     else:
         self.logger.info("Loading model from saved state.")
-        with open("14.pt", "rb") as file:
+        with open("B_M_I_Y_C_agent_cpu.pt", "rb") as file:
             self.trainings_model = pickle.load(file)
+            self.trainings_model.eval()
 
 def act(self, game_state: dict) -> str:
     """
@@ -71,16 +61,12 @@ def act(self, game_state: dict) -> str:
     start = timeit.timeit()
     print("start")
 
-    # todo Exploration vs exploitation
     random_prob = constants.EPS
     if self.train and random.random() < random_prob:
         self.logger.debug("Choosing action purely at random.")
 
-        # 80%: walk in any direction. 10% wait. 10% bomb.
         end = timeit.timeit()
         print(str((end - start) * 1000) + " sec RANDOM")
-        # action = np.random.choice(constants.ACTIONS, p=[.2, .2, .2, .2, .2])#, .1])
-        # action = np.random.choice(constants.ACTIONS, valid_actions(game_state))
 
         valid_actions_list = valid_actions(game_state)
         action = np.random.choice(constants.ACTIONS, p=valid_actions_list)
@@ -115,22 +101,16 @@ def state_to_features(game_state: dict) -> np.array:
     if game_state is None:
         return None
 
-    # Current features 3->3x3
-    # 1. Field 150 weg, 10 wand, >150 crate, >150coin
-    # 2. Bomb 255 if there is no bomb danger, 3,2,1 if there is danger
-    # 3. Free dir -> slice two upper rows, two bottom rows, two left columns and two right columns in 3x3 and check where is
-    # more place to walk (more ways)
-
     # self coordinates
     self_coord = game_state.get('self')[3]
     self_ch = np.zeros_like(game_state.get('field'))
     self_ch[self_coord[0], self_coord[1]] = 10
     ########
 
+    # bombs feature
     bombs = game_state.get('bombs')
     bombs_ch = np.ones_like(game_state.get('field')) * 255
     field_ch = copy.deepcopy(game_state.get('field').transpose())
-
 
     if len(bombs) > 0:
         for bomb in bombs:
@@ -144,7 +124,6 @@ def state_to_features(game_state: dict) -> np.array:
 
             for i in range(len(x_coords_bomb)):
                 if (x_coords_bomb[i] <= 15 and x_coords_bomb[i] >= 1):
-                    #bombs_ch[y_coor, x_coords_bomb[i]] = bomb[1]
                     if(((i%3)+1 == 1) and (field_ch[y_coor, x_coords_bomb[i]]!=-1)):
                         bombs_ch[y_coor, x_coords_bomb[i]] = bomb[1] * ((i%3)+1)
                     elif(((i%3)+1 == 2) and (field_ch[y_coor, x_coords_bomb[i]]!=-1) and (bombs_ch[y_coor, x_coords_bomb[i-1]]!=255)):
@@ -154,13 +133,16 @@ def state_to_features(game_state: dict) -> np.array:
 
             for i in range(len(y_coords_bomb)):
                 if (y_coords_bomb[i] <= 15 and y_coords_bomb[i] >= 1):
-                    #bombs_ch[y_coords_bomb[i], x_coor] = bomb[1]
                     if (((i % 3) + 1 == 1) and (field_ch[y_coords_bomb[i], x_coor]!=-1)):
                         bombs_ch[y_coords_bomb[i], x_coor] = bomb[1] * ((i%3)+1)
                     elif (((i % 3) + 1 == 2) and (field_ch[y_coords_bomb[i], x_coor]!=-1) and (bombs_ch[y_coords_bomb[i-1], x_coor]!=255)):
                         bombs_ch[y_coords_bomb[i], x_coor] = bomb[1] * ((i%3)+1) * 4
                     elif (((i % 3) + 1 == 3) and (field_ch[y_coords_bomb[i], x_coor]!=-1) and (bombs_ch[y_coords_bomb[i-1], x_coor]!=255)):
                         bombs_ch[y_coords_bomb[i], x_coor] = bomb[1] * ((i%3)+1) * 15
+
+    ########
+
+
 
 
     coins = game_state.get('coins')
@@ -170,12 +152,11 @@ def state_to_features(game_state: dict) -> np.array:
             coins_ch[coin[0], coin[1]] = 1
 
 
-    #field_ch = copy.deepcopy(game_state.get('field').transpose())
 
     for bomb in bombs:
         field_ch[bomb[0][1], bomb[0][0]] = 2
 
-    # BUILD FREE DIR 3 STEP
+    # free dir 3 step neighbors feature
     res = find_3neighbor_values(self_coord, field_ch)
     free_dir = np.ones((3,3))*10
     free_dir[0][1] = res[0]
@@ -184,29 +165,28 @@ def state_to_features(game_state: dict) -> np.array:
     free_dir[1][2] = res[3]
     #########
 
-
-    field_ch[self_coord[1], self_coord[0]] = 100
-    #bombs_ch[field_ch == -1] = 255
+    #field ch feature
+    field_ch[self_coord[1], self_coord[0]] = 10
     field_ch[field_ch == -1] = 10
-    #field_ch[field_ch == 0] = 150
     field_ch[field_ch == 0] = 10
     field_ch[field_ch == 1] = 220
     field_ch[coins_ch==1] = 150
+    #########
+
 
     for bomb in bombs:
         field_ch[bomb[0][1], bomb[0][0]] = bomb[1]
-    # field_ch[other_agents_ch==1] = 150
 
     ii = np.where(field_ch == 220)
     crate_coords = np.stack((ii[1], ii[0]))
 
+    exp_map = game_state['explosion_map'].T[self_coord[1] - 1:self_coord[1] + 2, self_coord[0] - 1:self_coord[0] + 2]
 
     field_ch = field_ch[self_coord[1] - 1:self_coord[1] + 2, self_coord[0] - 1:self_coord[0] + 2]
-    coins_ch = coins_ch[self_coord[1] - 1:self_coord[1] + 2, self_coord[0] - 1:self_coord[0] + 2]
     bombs_ch = bombs_ch[self_coord[1] - 1:self_coord[1] + 2, self_coord[0] - 1:self_coord[0] + 2]
 
 
-    # SEARCH FOR NEXT COIN
+    # SEARCH FOR NEXT COIN by euclidian distance
     min_dist = 1000
     x_dist_min = 0
     y_dist_min = 0
@@ -241,15 +221,13 @@ def state_to_features(game_state: dict) -> np.array:
         field_ch[2][0] = coin_dist
     #######
 
-
-
     # OTHER AGENTS
     others = game_state.get('others')
     others_arr = []
     for i in range(len(others)):
         others_arr.append(others[i][3])
 
-    # SEARCH FOR NEXT AGENT
+    # SEARCH FOR NEXT AGENT by euclidian distance
     min_dist_other_agent = 1000
     x_dist_min_other_agent = 0
     y_dist_min_other_agent = 0
@@ -261,7 +239,6 @@ def state_to_features(game_state: dict) -> np.array:
             x_dist_min_other_agent = others_arr[other_agent_ind][0] - self_coord[0]
             y_dist_min_other_agent = self_coord[1] - others_arr[other_agent_ind][1]
 
-    #if(min_dist_other_agent!=1000):
     if(min_dist_other_agent<=5):
         if (min_dist_other_agent == 0):
             min_dist_other_agent = 1
@@ -288,8 +265,7 @@ def state_to_features(game_state: dict) -> np.array:
             field_ch[2][0] = other_agent_dist
 
 
-
-    # SEARCH FOR NEXT CRATE
+    # SEARCH FOR NEXT CRATE by euclidian distance
     min_dist_crate = 1000
     x_dist_min_crate = 0
     y_dist_min_crate = 0
@@ -328,71 +304,20 @@ def state_to_features(game_state: dict) -> np.array:
         field_ch[field_ch == 220] = 10
     ########
 
-    #ccx = crate_coords[0][118]
-    #ccy = crate_coords[1][118]
-
-    ### check if next 4 steps crate if nearest crate 1 step away
-    fiel = game_state.get('field').T
-    # up_one = self_coord[1] - 1
-    # up_two = self_coord[1] - 2
-    # up_three = self_coord[1] - 3
-    # up_four = self_coord[1] - 4
-    # up_five = self_coord[1] - 5
-    #
-    # down_one = self_coord[1] + 1
-    # down_two = self_coord[1] + 2
-    # down_three = self_coord[1] + 3
-    # down_four = self_coord[1] + 4
-    # down_five = self_coord[1] + 5
-    #
-    # left_one = self_coord[0] - 1
-    # left_two = self_coord[0] - 2
-    # left_three = self_coord[0] - 3
-    # left_four = self_coord[0] - 4
-    # left_five = self_coord[0] - 5
-    #
-    # right_one = self_coord[0] + 1
-    # right_two = self_coord[0] + 2
-    # right_three = self_coord[0] + 3
-    # right_four = self_coord[0] + 4
-    # right_five = self_coord[0] + 5
-    #
-    # if ((255 in field_ch or 230 in field_ch) and up_five >= 1):
-    #     if (fiel[up_one, self_coord[0]] == 0 and fiel[up_two, self_coord[0]] == 0 and fiel[
-    #         up_three, self_coord[0]] == 0 and fiel[up_four, self_coord[0]] == 0 and fiel[up_five, self_coord[0]] == 1):
-    #         field_ch[0][1] = 300
-    # if ((255 in field_ch or 230 in field_ch) and down_five <= 15):
-    #     if (fiel[down_one, self_coord[0]] == 0 and fiel[down_two, self_coord[0]] == 0 and fiel[
-    #         down_three, self_coord[0]] == 0 and fiel[down_four, self_coord[0]] == 0 and fiel[
-    #         down_five, self_coord[0]] == 1):
-    #         field_ch[2][1] = 300
-    # if ((255 in field_ch or 230 in field_ch)  and left_five >= 1):
-    #     if (fiel[self_coord[1], left_one] == 0 and fiel[self_coord[1], left_two] == 0 and fiel[
-    #         self_coord[1], left_three] == 0 and fiel[self_coord[1], left_four] == 0 and fiel[
-    #         self_coord[1], left_five] == 1):
-    #         field_ch[1][0] = 300
-    #
-    # if ((255 in field_ch or 230 in field_ch)  and right_five <= 15):
-    #     if (fiel[self_coord[1], right_one] == 0 and fiel[self_coord[1], right_two] == 0 and fiel[
-    #         self_coord[1], right_three] == 0 and fiel[self_coord[1], right_four] == 0 and fiel[
-    #         self_coord[1], right_five] == 1):
-    #         field_ch[1][2] = 300
-
+    # if bomb danger there, set whole field ch to 10
     if (np.count_nonzero(bombs_ch == 255)<9):
         field_ch = np.ones_like(field_ch) * 10
-        # for b in bombs:
-        #     fiel[b[0][1], b[0][0]] = 1
-        # fiel_self_coord = fiel[self_coord[1] - 1:self_coord[1] + 2, self_coord[0] - 1:self_coord[0] + 2]
-        # # field_ch[field_ch > 150]=10
-        # co = np.argwhere(field_ch > 150)
-        # for i in range(len(co)):
-        #     if (field_ch[co[i][0], co[i][1]] > 150 and fiel_self_coord[co[i][0], co[i][1]] == 1):
-        #         field_ch[co[i][0], co[i][1]] = 10
 
+    # if bomb danger there, set centre coord from field_ch to 1 (bomb danger, do not place any other bombs now)
     bomb_possible = game_state.get('self')[2]
     if not bomb_possible:
-        field_ch[1][1] = 0
+        field_ch[1][1] = 1
 
+    free_dir[1][1] = 50
+
+    bombs_ch[exp_map != 0] = 1
+
+    # stack features together
     field_ch_ten = torch.from_numpy(field_ch).double()
     bombs_ch_ten = torch.from_numpy(bombs_ch).double()
     free_dir_ten = torch.from_numpy(free_dir).double()
@@ -405,6 +330,13 @@ def state_to_features(game_state: dict) -> np.array:
 
 
 def valid_actions(game_state):
+    """
+     This method searches for valid actions in a current state for epsilon greedy procedure.
+
+     :param game_state: Dictionary describing everything on the board.
+     :return: List including probabilities for the possible actions [up, right, down, left, wait, bomb]
+     """
+
     field = game_state.get('field')
     own_pos = game_state.get('self')[3]
 
@@ -422,6 +354,14 @@ def valid_actions(game_state):
 
 
 def find_3neighbor_values(self_coord, field_ch):
+    """
+    This method searches for 3 neighbors of a current position self_coord in a field_ch array.
+
+    :param self_coord: The self coordinate tuple with coordinates.
+    :param field_ch: The array that describes everything on the board.
+    :return: Final list including 4 different 3 step neighbor values [up, down, left, right]
+    """
+
     up = (self_coord[0], self_coord[1] - 1)
 
     up_up = (up[0], up[1] - 1)
@@ -676,7 +616,5 @@ def find_3neighbor_values(self_coord, field_ch):
         final_res.append(counter * 100)
 
     return final_res
-
-
 
 

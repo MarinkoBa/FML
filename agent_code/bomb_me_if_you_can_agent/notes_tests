@@ -101,3 +101,21 @@ and third column for right), after first two rows for up, second two rows for do
 
 15.
 - crate dens 0.35
+
+16.
+- 3 layer
+- batch norm
+- 0.75 density crates
+
+17.
+- 50 steps update
+- rewards modified
+
+18.
+- coins and one peaceful agent there
+-400 steps
+-some rewards not there -> bomb placed badly and correctly e.g.
+
+
+19_5:
+-crate destroyer
