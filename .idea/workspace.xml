@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="puah creates_expand_model_crates_action after 38k training">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/callbacks.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/callbacks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent_code/tpl_agent/callbacks.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/tpl_agent/callbacks.py" afterDir="false" />
-    </list>
+    <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="commented version" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -46,7 +40,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
@@ -117,7 +111,7 @@
       <workItem from="1616715509367" duration="18950000" />
       <workItem from="1616844701205" duration="1804000" />
       <workItem from="1616977411157" duration="17000" />
-      <workItem from="1616977446597" duration="4455000" />
+      <workItem from="1616977446597" duration="4760000" />
     </task>
     <task id="LOCAL-00001" summary="added mean_reward plot">
       <created>1616168030463</created>
@@ -217,7 +211,14 @@
       <option name="project" value="LOCAL" />
       <updated>1616549413692</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="commented version">
+      <created>1616983642703</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1616983642703</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -266,7 +267,8 @@
     <MESSAGE value="push coin_based_model" />
     <MESSAGE value="ready to train with crates 2." />
     <MESSAGE value="change bomb and free_dir feature" />
-    <option name="LAST_COMMIT_MESSAGE" value="change bomb and free_dir feature" />
+    <MESSAGE value="commented version" />
+    <option name="LAST_COMMIT_MESSAGE" value="commented version" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
