@@ -57,6 +57,7 @@ def features_3x3_space(game_state):
     bomb_possible = int(game_state.get('self')[2] == True)
 
     # find_3 neighbours_values delivers an array in the form [up,down,left,right]
+    # free dir is a factor, how much opportunities the agent has in the next three steps for each direction
     free_dir = find_3neighbor_values(self_coord=own_pos, field_ch=field)
     free_dir = [[up_steps, free_dir[0], down_steps], [free_dir[2], bomb_possible, free_dir[3]],
                 [left_steps, free_dir[1], right_steps]]
