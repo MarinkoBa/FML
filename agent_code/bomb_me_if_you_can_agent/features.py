@@ -5,6 +5,25 @@ import scipy.spatial.distance as distance
 
 
 def features_3x3_space(game_state):
+    '''
+    Method transforms the game_state into  multidimensional tensor of shape 5x3x3.
+    Converts features from game board to multiple features of shape 3x3 (matrix).
+    The five features, which are processed are:
+
+    - agent-orientation (free ways)
+    - nearest coin (distance and direction to nearest coin)
+    - crates (distance and direction to each crate)
+    - bombs (in the 3x3 surrounding to the agent)
+    - enemies (distance and direction to each enemy)
+
+    Args:
+        game_state: Includes all information about the current state on the game board
+
+    Returns:
+        Feature tensor of shape 5x3x3
+
+    '''
+    # calculate the free distance into horizontal and vertical directions
     field = game_state.get('field').T
     own_pos = game_state.get('self')[3]
 
@@ -33,6 +52,8 @@ def features_3x3_space(game_state):
                 right_steps = right_steps + 1
 
     actions = np.asarray([up_steps, down_steps, left_steps, right_steps])
+
+    # set additionally, if the agent is able to place a bomb
     bomb_possible = int(game_state.get('self')[2] == True)
 
     # find_3 neighbours_values delivers an array in the form [up,down,left,right]
@@ -48,11 +69,12 @@ def features_3x3_space(game_state):
     # get orientation of nearest_coin
     down, up, left, left_up, left_down, right, right_up, right_down = 0, 0, 0, 0, 0, 0, 0, 0
 
+    # determine manhattan distance to each coin on field
     man_dis = []
     if len(coins) > 0:
         for coin in coins:
             field[coin[1], coin[0]] = 1
-            # determine manhattan distance to each coin on field
+
             man_dis.append(distance.cityblock([own_pos[1], own_pos[0]], [coin[1], coin[0]]))
 
     nearest_coin_dist = 0
@@ -63,7 +85,7 @@ def features_3x3_space(game_state):
         nearest_coin_dist = man_dis[nearest_coin]
         nearest_coin_pos = coins[nearest_coin]
 
-        # Determine Orientation of coin
+        # Determine Orientation/direction of the nearest coin in relation to the agent
         if own_pos[1] == nearest_coin_pos[1]:
             if own_pos[0] >= nearest_coin_pos[0]:
                 left = 1
@@ -84,6 +106,7 @@ def features_3x3_space(game_state):
             left_down = 1
 
     coins = np.asarray([[left_up, up, right_up], [left, 0, right], [left_down, down, right_down]])
+    # set the distance of the nearest coin
     mask = coins == 1
     coins[mask] = nearest_coin_dist
 
@@ -99,7 +122,9 @@ def features_3x3_space(game_state):
             bomb_timer = bomb[1] + 3
             bomb_field[bomb[0][1], bomb[0][0]] = bomb_timer
 
+            # calculate the radius of explosion, explosion is not able to cross walls.
             for i in range(settings.BOMB_POWER + 1):
+                # set to false, if explosion touch wall
                 if up:
                     if field[bomb[0][1] + i, bomb[0][0]] == -1:
                         up = False
@@ -113,6 +138,7 @@ def features_3x3_space(game_state):
                     if field[bomb[0][1], bomb[0][0] - i] == -1:
                         left = False
 
+                # set additionally timer, when the explosion will take place at this position
                 if up:
                     bomb_field[bomb[0][1] + i, bomb[0][0]] = bomb_timer
                 if down:
@@ -138,16 +164,16 @@ def features_3x3_space(game_state):
 
     bombs = np.asarray([[up_left, up, up_right], [left, middle, right], [down_left, down, down_right]])
 
-    # Additionaly apply explotions to bombs map
+    # Additionally apply explosions to bombs map
     exp_map = game_state['explosion_map'].T[own_pos[1] - 1:own_pos[1] + 2, own_pos[0] - 1:own_pos[0] + 2]
     bombs[exp_map != 0] = 1
 
-    # Get 3x3 Info About crates
+
+    # crate feature
     field = game_state.get('field').T
     own_pos = game_state.get('self')[3]
 
-    # check if neighboured fields are valid
-    # count steps
+    # count steps to next crate on vertical and horizontal direction
     up, down, left, right = True, True, True, True
     up_steps, down_steps, left_steps, right_steps = 0, 0, 0, 0
     for i in range(14):
@@ -176,7 +202,7 @@ def features_3x3_space(game_state):
                 right = False
                 right_steps = i
 
-
+    # if you only want to use the nearest crate
     # mask = crates == 0
     # crates[mask] = 100
     # nearest_crate_index = np.unravel_index(crates.argmin(), crates.shape)
@@ -184,25 +210,24 @@ def features_3x3_space(game_state):
     # nearest_crates[nearest_crate_index[0], nearest_crate_index[1]] = crates[
     #     nearest_crate_index[0], nearest_crate_index[1]]
 
-    # additional nearest crate orientation
     down, up, left, left_up, left_down, right, right_up, right_down = 0, 0, 0, 0, 0, 0, 0, 0
     crates_tupels = np.where(field == 1)
     crates_tupels = list(zip(crates_tupels[1], crates_tupels[0]))
     man_dis = []
     if len(crates_tupels) > 0:
         for c in crates_tupels:
-            # determine manhattan distance to each coin on field
+            # determine manhattan distance to each crate on field
             man_dis.append(distance.cityblock([own_pos[1], own_pos[0]], [c[1], c[0]]))
 
-    nearest_crate_dist = 0
 
     if len(man_dis) > 0:
-        # select coin with shortest distance
+        # select crate with shortest distance
         nearest_crate = np.argmin(man_dis)
         nearest_crate_dist = man_dis[nearest_crate]
         nearest_crate_pos = crates_tupels[nearest_crate]
 
-        # Determine Orientation of coin
+        # Additionally, if the nearest crate is in diagonal direction instead of vertical/horizontal direction,
+        # the distance of this crate will be registered to the particular orientation in the matrix
         if not own_pos[1] == nearest_crate_pos[1] and not own_pos[0] == nearest_crate_pos[0]:
 
             if own_pos[0] < nearest_crate_pos[0] and own_pos[1] < nearest_crate_pos[1]:
@@ -217,15 +242,17 @@ def features_3x3_space(game_state):
     crates = np.asarray([[left_up, up_steps, right_up], [left_steps, 0, right_steps], [left_down, down_steps, right_down]])
 
     # feature enemies
-    # get orientation of enemies
     down, up, left, left_up, left_down, right, right_up, right_down = 0, 0, 0, 0, 0, 0, 0, 0
     enemies = game_state.get('others')
 
+    # Decide for each enemy the orientation and assign the distance, if two or more enemies in the same orientation
+    # space,only register the nearest enemy
     for enemy in enemies:
+        # calculate manhattan distance from agent to enemy
         enemy_dist = distance.cityblock([own_pos[1], own_pos[0]], [enemy[3][1], enemy[3][0]])
         enemy_pos = enemy[3]
 
-        # Determine Orientation of enemy
+        # Determine Orientation of enemy and assign distance to enemy
         if own_pos[1] == enemy_pos[1]:
             if own_pos[0] >= enemy_pos[0] and not left > enemy_dist:
                 left = enemy_dist
@@ -249,7 +276,7 @@ def features_3x3_space(game_state):
 
 
 
-# transform np-arrays to tensors
+    # transform np-arrays to tensors
     free_dir = torch.tensor(free_dir).double()
     crates = torch.tensor(crates).double()  # crates instead of nearest crates to give model more information
     bombs = torch.tensor(bombs).double()
@@ -257,18 +284,34 @@ def features_3x3_space(game_state):
     actions = torch.tensor(actions).double()
     enemies = torch.tensor(enemies).double()
 
-    # stacked_channels = torch.stack((self_ch_ten, other0_ch_ten, bombs_ch_ten, coins_ch_ten, explosion_map_ch_ten), 0)
     stacked_channels = torch.stack((free_dir, coins, bombs, crates, enemies), 0)
     return stacked_channels
 
 
 def feature_field(game_state):
-    field = game_state.get('field').T
+    '''
+    Method transforms the game_state into  multidimensional tensor of shape 5x17x17.
+    The five features (each shape of 17x17), which are processed are:
 
+    - field (represent all walls, crates and free ways)
+    - coins (includes all positions of coins in matrix and the distance)
+    - self (own position in 17x17 matrix)
+    - bombs (all bombs on the 17x17 game board)
+    - enemies (all enemies on the game board)
+
+    Args:
+        game_state: Includes all information about the current state on the game board
+
+    Returns: A 5x17x17 feature tensor of the game field.
+
+    '''
+
+    field = game_state.get('field').T
     self_coord = game_state.get('self')[3]
     self = np.zeros_like(field)
     self[self_coord[1], self_coord[0]] = 1
 
+    # set others on other_field, if they are still alive.
     others = game_state.get('others')
     other_field = np.zeros_like(field)
     if len(others) > 0:
@@ -282,12 +325,14 @@ def feature_field(game_state):
             other_coord = others[2][3]
             other_field[other_coord[1], other_coord[0]] = 1
 
+    # set on each position where's a bomb on the field a 1 into the bomb_field matrix
     bombs = game_state.get('bombs')
     bomb_field = np.zeros_like(field)
     if len(bombs) > 0:
         for bomb in bombs:
             bomb_field[bomb[1], bomb[0]] = 1
 
+    # set on each coordinate where's a coin the manhattan distance to this coin
     coins_coord = game_state.get('coins')
     coins = np.zeros_like(field)
     if len(coins_coord) > 0:
@@ -328,20 +373,22 @@ def feature_field(game_state):
                 if left:
                     bomb_field[bomb[0][1], bomb[0][0] - i] = bomb_timer
 
+    # if you want only 7x7 field_feature instead of 17x17, you have to comment it out.
     # field = get_7x7_submatrix(field,self_coord)
     # others = get_7x7_submatrix(other_field,self_coord)
     # bombs = get_7x7_submatrix(bomb_field,self_coord)
     # coins = get_7x7_submatrix(coins,self_coord)
 
+    # transform the numpy arrays to tensors
     field = torch.tensor(field).double()
-    # self = torch.tensor(self).double()
+    self = torch.tensor(self).double()
     others = torch.tensor(other_field).double()
     bombs = torch.tensor(bomb_field).double()
     coins = torch.tensor(coins).double()
 
-    field = torch.tensor(field).double()
+    # stack to multidimensional tensor
     tensor_ch = torch.stack(
-        (field, others, bombs, coins), 0)
+        (field, self,others, bombs, coins), 0)
 
     tensor_ch = tensor_ch.unsqueeze(0)
 
@@ -349,15 +396,24 @@ def feature_field(game_state):
 
 
 def get_7x7_submatrix(field, self_coord):
-    # create only 7x7 subfield from 17x17
-    #
+    '''
+    Method return a 7x7 cutout from the 17x17 input matrix based on the self_coord as centre.
+
+    Args:
+        field: Matrix of shape 17x17
+        self_coord: Center of the 7x7 output matrix.
+
+    Returns:
+        7x7 submatrix around the self_coord from the 17x17 matrix
+
+    '''
     # Expand 17x17 matrix to 19x19
     field_19x19 = np.full(shape=(19, 19), fill_value=-1)
     # Fill 19x19 matrix with values from field
     exp_val = 2
     field_19x19[exp_val:exp_val + field.shape[0], exp_val:exp_val + field.shape[1]] = field
 
-    # get 7x7 from 19x19 matrix based on own position
+    # get 7x7 from 19x19 matrix based on self coordinate
     x = self_coord[0] + exp_val
     y = self_coord[0] + exp_val
 

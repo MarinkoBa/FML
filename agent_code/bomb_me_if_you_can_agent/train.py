@@ -94,7 +94,7 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
     self.logger.debug(f'Encountered game event(s) {", ".join(map(repr, events))} in step {next_game_state["step"]}')
 
 
-    # Idea: Add your own events to hand out rewards
+    # OWN AUXILIARY REWARDS
     # CHECK PLACEMENT OF THE BOMB
     if old_game_state is not None:
 
@@ -132,6 +132,7 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
     if transition[0] != None:
         self.transitions.append(transition)
 
+    # train the model after each step.
     train_neural_network(self)
 
 
@@ -223,13 +224,13 @@ def reward_from_events(self, events: List[str]) -> int:
     game_rewards = {
         e.COIN_COLLECTED: 0.7,
         e.KILLED_OPPONENT: 0.4,
-        e.INVALID_ACTION: -0.9,  # macht es sinn invalide aktionen zu bestrafen?
+        e.INVALID_ACTION: -0.9,
         e.COIN_FOUND: 0.01,
         e.CRATE_DESTROYED: 0.15,
         e.GOT_KILLED: -0.80,
         e.KILLED_SELF: -1,
         e.SURVIVED_ROUND: 0.8,
-        e.OPPONENT_ELIMINATED: 0.1,  # nicht durch unsern agent direkt gekillt
+        e.OPPONENT_ELIMINATED: 0.1,
         e.BOMB_DROPPED: 0,
         e.BOMB_EXPLODED: 0,
         e.SURVIVED_BOMB: 0.1,
@@ -251,9 +252,16 @@ def reward_from_events(self, events: List[str]) -> int:
 
 
 def sample_batch(self):
+    '''
+    Method samples a random Batch from transitions.
+    '''
     return random.sample(self.transitions, constants.BATCH_SIZE)
 
 def load_training_data(self):
+    '''
+    Method loads training data, which was collected by the self playing strategy from the user_agent.
+    The training data will be added to the transitions buffer and used for training the model.
+    '''
     with open("training_data.pt", "rb") as file:
         transitions = pickle.load(file)
 
@@ -262,7 +270,10 @@ def load_training_data(self):
         self.transitions.append(trans)
 
 def train_neural_network(self):
-    # TODO check if Batch filled, train
+    '''
+    Method updates the training_model, based on the training data which was collected by the agent during playing the game via Exploration/Explotation.
+    Parameters of the training such as Batch size, learning rate and so on can be modified in the constants.py
+    '''
     if len(self.transitions) >= constants.BATCH_SIZE and self.train:
         batch = random.sample(self.transitions, constants.BATCH_SIZE)
         transitions = Transition(*zip(*batch))
@@ -275,7 +286,7 @@ def train_neural_network(self):
         reward = torch.tensor(transitions.reward)
         next_game_state = torch.cat(next_game_state_filled_val)
 
-        # TODO modify input -> tensor 128x7x17x17
+
         q_val_taken_actions = self.training_model(game_state.to(device='cuda:0')).gather(1, action.to(
             device='cuda:0').unsqueeze(1))
 
@@ -285,6 +296,7 @@ def train_neural_network(self):
 
         final_state_action_values = (q_val_next_state_full * constants.GAMMA) + reward.to(device='cuda')
 
+        # calculate loss and make backpropagation
         loss = self.criterion(q_val_taken_actions, final_state_action_values.unsqueeze(1))
         self.optimizer.zero_grad()
         loss.backward()

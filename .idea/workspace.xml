@@ -4,6 +4,9 @@
     <list default="true" id="8d712a0f-ea07-4a89-a456-4b75e31ffc04" name="Default Changelist" comment="puah creates_expand_model_crates_action after 38k training">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/callbacks.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/callbacks.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent_code/tpl_agent/callbacks.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent_code/tpl_agent/callbacks.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,13 +61,13 @@
   </component>
   <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="FML_6" />
+      <module name="FML" />
       <option name="INTERPRETER_OPTIONS" value="-s" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="C:\Users\csi-se\anaconda3\envs\bombenv\python.exe" />
+      <option name="SDK_HOME" value="C:\Users\fabio\anaconda3\envs\bombenv\python.exe" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -113,6 +116,8 @@
       <workItem from="1616707212224" duration="7589000" />
       <workItem from="1616715509367" duration="18950000" />
       <workItem from="1616844701205" duration="1804000" />
+      <workItem from="1616977411157" duration="17000" />
+      <workItem from="1616977446597" duration="4455000" />
     </task>
     <task id="LOCAL-00001" summary="added mean_reward plot">
       <created>1616168030463</created>
@@ -268,23 +273,13 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py</url>
-          <line>335</line>
+          <line>382</line>
           <option name="timeStamp" value="102" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py</url>
-          <line>347</line>
+          <line>394</line>
           <option name="timeStamp" value="104" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py</url>
-          <line>297</line>
-          <option name="timeStamp" value="105" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/agent_code/bomb_me_if_you_can_agent/features.py</url>
-          <line>252</line>
-          <option name="timeStamp" value="107" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -300,5 +295,8 @@
         <watch expression="crates" />
       </configuration>
     </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/FML$main.coverage" NAME="main Coverage Results" MODIFIED="1616982559141" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
