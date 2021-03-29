@@ -1,0 +1,121 @@
+4.
+-> no free dir feature, only in 3x3 matrix -> look after 6left positions
+(first two columns) -> value of left, look after 6 right positions (second
+and third column for right), after first two rows for up, second two rows for down
+
+
+5:
+ -> 3x3x3 features:
+    1.) field (10wall, 150way, 100selfcoord,
+    nearest coin: >=150 -> the smaller the distance, the bigger value
+    between 150 and 255. The same with crates.
+    2.) bomb -> 255where not a bomb danger, 3,2,1, where bomb danger
+    3.) free direction: look after nearest moves (up, down, left, right) and
+    after their neighbors (again up down left right) sum up for every possible move
+    the available ways and present in a feature x100. The rest is 10.
+ -> steps, alle 5k episodes, 20steps more allowed (start at 20steps, after
+ 5k episodes -> 40 steps, after 10k episodes 60steps...at 100k episodes 400steps
+
+6.
+ same as 5, difference: all 10k episodes, 10more steps (start at 20 steps,
+ after 10k -> 30steps, after 20k 40steps...400k episodes training in a sum
+
+7.
+ difference in the bomb feature: the position of the bomb encoded in the
+ free direction feature. If bomb there, you cannot go this direction.
+ difference in a field feature: if bomb there, the value set to 3,2,1 (the way
+ is 10, so even worse -> zero)
+
+
+ 8. 3.steps for free dir
+
+
+ 9. from -15 to -25 for invalid actions reward
+
+ 10. fixed model, 3steps free dir
+
+ 66 -> trained model from 6, training continued mit 10.
+
+ 99 -> trained model from 9, training continued mit 10.
+
+ 999 -> trained model from 99, training continued with 10 + oponents there in the field_ch -> minus value for nearest oponent, distance included. | abbruch
+
+ 99cont -> trained model from 99, training continued 99
+
+ 99coins -> trained model from 99, training continued 99 with a goal to collect coins | abbruch
+
+ 10cont -> continue 10 at ~45k
+
+ 10 cont with two peacefull agents and one random -> 10cont used against agents, training continued
+
+ 10 cont with two peacefull agents and one random with bombs and crates optimized:
+    - bombs -> distance to the center of the bomb included in the bomb_ch feature (multiplied with 3,2,1)
+    - field_ch feature -> modify nearest crate if crate placed on the side (diagonal in the 3x3 + in the next 4 steps is a way (0) and
+    fifth position is a crate) -> this is a trap and there should not be placed a bomb
+
+
+10 cont with two peacefull agents and one random with bombs and crates optimized_2:
+    - if bomb danger -> bomb ch includes some value where !=255 -> set in field_ch nearest coin/box to value -> way 150
+    (if bomb danger, just go away, way is more important as nearest crate)
+
+
+10 cont with two peacefull agents and one random with bombs and crates optimized_3:
+    - add 0 to field ch centre if bomb placed by myself
+    - means agent should not place another bomb until !=0
+
+10_3newly:
+ - newest version newly trained versus 2x peacefull and 1x rule based!
+
+11_newly:
+   - all 10000 steps EPS = 0.9
+   - field_ch -> 10-100 other agent, 100-170 coins, 170-255 crates
+   - all 10 rounds update target net
+   - add two hidden layer to the net
+   - add rewards for got killed and survived bomb
+   - against 2x peaceful and one rule based
+   - 20 steps start -> 10000episodes +10 steps
+
+12_newly:
+- -100wait
+- -100invalid
+
+122:
+- game rewards modified
+- 20 rounds -> target net update
+- 200 step start
+
+123:
+- game rewards modified
+- crate density 0.5
+- 3x peaceful
+
+
+13:
+- no ways in field_ch -> just 10 there, next crate (170-255), next coin (100-170) and next opposite agent (10-100) if in distance < 5
+- 20 steps -> all 10000 episodes +20
+
+
+14.
+- bomb repaired: behind wall no danger
+- 3x peaceful
+
+15.
+- crate dens 0.35
+
+16.
+- 3 layer
+- batch norm
+- 0.75 density crates
+
+17.
+- 50 steps update
+- rewards modified
+
+18.
+- coins and one peaceful agent there
+-400 steps
+-some rewards not there -> bomb placed badly and correctly e.g.
+
+
+19_5:
+-crate destroyer

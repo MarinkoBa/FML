@@ -1,28 +1,28 @@
-AMOUNT_OF_TRAINING_EPISODES = 100000
-NAME_OF_FILES = 'enemy_destroyer_model_1'
-
-# Hyper parameters
-TRANSITION_HISTORY_SIZE = 10000  # keep only ... last transitions
-RECORD_ENEMY_TRANSITIONS = 1.0  # record enemy transitions with probability ...
-
 BATCH_SIZE = 128
-GAMMA = 0.9
-EPS = 1
-EPS_END = 0.05
-EPS_DECAY = 5000
+GAMMA = 0.95
+EPS_START = 0.9
+EPS_END = 0.1
+EPS_DECAY = 200
 TARGET_UPDATE = 10
-LEARNING_RATE = 0.0001
+
+EPS = 0.9
+
+ACTIONS = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', 'BOMB']
+
+
+TRANSITIONS_AMOUNT_UPDATE = 50
+
+ROUNDS_NR = 0
 
 
 ROUNDS_MODEL_UPDATE = 5
-ROUNDS_NR = 1
-INCREASE_STEPS_AFTER_EPISODES = 5000
-INCREASE_STEP_VALUE = 20
 
 # Plot
-EPISODES_TO_PLOT = 500
+EPISODES_TO_PLOT = 1000
 PLOT_MEAN_OVER_ROUNDS = 100
-SIZE_Y_AXIS = 10
 
-# Possible ACTIONS
-ACTIONS = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', 'BOMB']
+
+
+# Hyper parameters -- DO modify
+TRANSITION_HISTORY_SIZE = 5000  # keep only ... last transitions
+RECORD_ENEMY_TRANSITIONS = 1.0  # record enemy transitions with probability ...

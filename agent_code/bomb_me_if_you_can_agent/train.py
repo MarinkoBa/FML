@@ -3,28 +3,26 @@ import random
 from collections import namedtuple, deque
 from typing import List
 import numpy as np
-import torch
-import torch.nn as nn
 import settings as s
+
+import matplotlib.pyplot as plt
+import torch
 
 import events as e
 from .callbacks import state_to_features
-from agent_code.bomb_me_if_you_can_agent import constants
-import matplotlib.pyplot as plt
-import os
-
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+from . import constants
 
 # This is only an example!
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
-PLACEHOLDER_EVENT = 'PLACEHOLDER'
 
+PLACEHOLDER_EVENT = 'PLACEHOLDER'
 
 def setup_training(self):
     """
-    Initialise self for training purpose.a
+    Initialise self for training purpose.
+
     This is called after `setup` in callbacks.py.
 
     :param self: This object is passed to all callbacks and you can set arbitrary values.
@@ -32,46 +30,43 @@ def setup_training(self):
     # Example: Setup an array that will note transition tuples
     # (s, a, r, s')
     self.transitions = deque(maxlen=constants.TRANSITION_HISTORY_SIZE)
-    self.penultimate_position = (0,0)
+
 
     self.round_events = []
     self.rewards_list = []
     self.reward_mean = []
     self.rewards_list_game = []
+    self.steps_list_game = []
     self.reward_mean_game = []
-    self.penultimate_position = (0, 0)
+    self.penultimate_position = (0,0)
 
-    # setup plot
+    plt.figure(figsize=(20, 5))
 
-    # plt.title('Q-Net Training')
-    # plt.xlabel('Episode')
-    # plt.ylabel('Rewards')
-    # plt.ylim([-constants.SIZE_Y_AXIS, constants.SIZE_Y_AXIS])
-    # plt.ion()
-
-    plt.figure(figsize=(12, 5))
-
-    plt.subplot(121)
-    plt.title('Rewards training')
+    plt.subplot(131)
+    plt.title('Steps per round')
     plt.xlabel('Episode')
-    plt.ylabel('Rewards')
-    plt.ylim([-constants.SIZE_Y_AXIS, constants.SIZE_Y_AXIS])
+    plt.ylabel('Step')
+    plt.ylim([0, 410])
     plt.ion()
+    ax = plt.gca()
 
-    plt.subplot(122)
+    plt.subplot(132)
     plt.title('Rewards game')
     plt.xlabel('Episode')
     plt.ylabel('Rewards')
     plt.ylim([0, 30])
     plt.ion()
+    ax = plt.gca()
 
-    plt.suptitle('Q-Net Training')
+    plt.subplot(133)
+    plt.title('Score after 1000 round')
+    plt.ylabel('Score')
+    plt.ylim([0, 24500])
+    plt.ion()
+    ax = plt.gca()
 
-    # Pre Training:
-    # load_training_data(self)
-    # for i in range(100):
-    #     print('Pre Training Round: '+str(i))
-    #     train_neural_network(self)
+    plt.suptitle('Q-Net Test')
+
 
 
 def game_events_occurred(self, old_game_state: dict, self_action: str, next_game_state: dict, events: List[str]):
@@ -93,48 +88,136 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, next_game
     """
     self.logger.debug(f'Encountered game event(s) {", ".join(map(repr, events))} in step {next_game_state["step"]}')
 
+    if(old_game_state!=None and next_game_state!=None):
+        # SURVIVED OWN BOMB
+        if(old_game_state['self'][2]==False and next_game_state['self'][2]==True):
+            events.append(e.SURVIVED_BOMB)
 
-    # OWN AUXILIARY REWARDS
-    # CHECK PLACEMENT OF THE BOMB
-    if old_game_state is not None:
 
+        # CHECK PLACEMENT OF THE BOMB -> Bad placed vs good placed reward
         old_field = old_game_state.get('field').T
         bombs = next_game_state.get('bombs')
         for i in range(len(bombs)):
             if bombs[i][1] == 3:
-                if (old_field[bombs[i][0][1] + 1, bombs[i][0][0]] == 1 or old_field[
-                    bombs[i][0][1] - 1, bombs[i][0][0]] == 1 or
-                    old_field[bombs[i][0][1], bombs[i][0][0] + 1] == 1 or old_field[
-                        bombs[i][0][1], bombs[i][0][0] - 1] == 1) and (
-                        e.BOMB_DROPPED in events) and old_game_state.get('self')[3] == bombs[i][0]:
+                if (old_field[bombs[i][0][1] + 1, bombs[i][0][0]]==1 or old_field[bombs[i][0][1] - 1, bombs[i][0][0]]==1 or
+                    old_field[bombs[i][0][1], bombs[i][0][0] + 1]==1 or old_field[bombs[i][0][1], bombs[i][0][0] - 1]==1) and (
+                        e.BOMB_DROPPED in events) and old_game_state.get('self')[3]==bombs[i][0]:
                     events.append(e.BOMB_PLACED_AT_CRATE)
 
+                elif (old_field[bombs[i][0][1] + 1, bombs[i][0][0]]!=1 and old_field[bombs[i][0][1] - 1, bombs[i][0][0]]!=1 and
+                    old_field[bombs[i][0][1], bombs[i][0][0] + 1]!=1 and old_field[bombs[i][0][1], bombs[i][0][0] - 1]!=1) and (
+                        e.BOMB_DROPPED in events) and old_game_state.get('self')[3]==bombs[i][0]:
+                    events.append(e.BOMB_PLACED_BAD)
 
-    if next_game_state.get('step') >= 2:
-        if next_game_state.get('self')[3] == self.penultimate_position and e.BOMB_DROPPED not in events and e.WAITED not in events:
-            events.append(e.RETURN_TO_PREVIOUS_POS)
-        self.penultimate_position = old_game_state.get('self')[3]
+        # check if old position reached
+        if next_game_state.get('step') >= 2:
+            if next_game_state.get('self')[3] == self.penultimate_position and e.BOMB_DROPPED not in events and e.WAITED not in events:
+                events.append(e.RETURN_TO_PREVIOUS_POS)
+            self.penultimate_position = old_game_state.get('self')[3]
 
-    if e.BOMB_EXPLODED in events and e.KILLED_SELF not in events:
-        events.append(e.SURVIVED_BOMB)
-    if e.BOMB_DROPPED in events and old_game_state.get('step') == 1:
-        events.append(e.PLACED_BOMB_FIRST_STEP)
+        # CHECK IF MOVED TOWARDS CRATE
+        self_coord = old_game_state.get('self')[3]
+        old_fieldup = old_game_state.get('field').T[self_coord[1] - 1, self_coord[0]]
+        old_fielddown = old_game_state.get('field').T[self_coord[1] + 1, self_coord[0]]
+        old_fieldright = old_game_state.get('field').T[self_coord[1], self_coord[0] + 1]
+        old_fieldleft = old_game_state.get('field').T[self_coord[1], self_coord[0] - 1]
+
+        new_fieldup = 0
+        new_fieldup2 = 0
+        new_fieldup3 = 0
+        new_fieldup4 = 0
+        new_fielddown = 0
+        new_fielddown2 = 0
+        new_fielddown3 = 0
+        new_fielddown4 = 0
+        new_fieldright = 0
+        new_fieldright2 = 0
+        new_fieldright3 = 0
+        new_fieldright4 = 0
+        new_fieldleft = 0
+        new_fieldleft2 = 0
+        new_fieldleft3 = 0
+        new_fieldleft4 = 0
+        if(e.MOVED_LEFT in events):
+            new_fieldup = next_game_state.get('field').T[self_coord[1] - 1, self_coord[0]-1]
+            new_fielddown = next_game_state.get('field').T[self_coord[1] + 1, self_coord[0]-1]
+            new_fieldright = next_game_state.get('field').T[self_coord[1], self_coord[0] + 1 - 1]
+            new_fieldleft = next_game_state.get('field').T[self_coord[1], self_coord[0] - 1 - 1]
+
+            if(self_coord[0] - 1) > 5:
+                new_fieldleft2 = next_game_state.get('field').T[self_coord[1], self_coord[0] - 1 - 1 - 1]
+                new_fieldleft3 = next_game_state.get('field').T[self_coord[1], self_coord[0] - 1 - 1 - 1 -1]
+                new_fieldleft4 = next_game_state.get('field').T[self_coord[1], self_coord[0] - 1 - 1 - 1 -1 -1]
+
+        if(e.MOVED_RIGHT in events):
+            new_fieldup = next_game_state.get('field').T[self_coord[1] - 1, self_coord[0]+1]
+            new_fielddown = next_game_state.get('field').T[self_coord[1] + 1, self_coord[0]+1]
+            new_fieldright = next_game_state.get('field').T[self_coord[1], self_coord[0] + 1 + 1]
+            new_fieldleft = next_game_state.get('field').T[self_coord[1], self_coord[0] - 1 + 1]
+
+            if(self_coord[0] + 1) < 10:
+                new_fieldright2 = next_game_state.get('field').T[self_coord[1], self_coord[0] + 1 + 1 +1]
+                new_fieldright3 = next_game_state.get('field').T[self_coord[1], self_coord[0] + 1 + 1 +1 +1]
+                new_fieldright4 = next_game_state.get('field').T[self_coord[1], self_coord[0] + 1 + 1 +1 +1 +1]
+
+
+        if(e.MOVED_UP in events):
+            new_fieldup = next_game_state.get('field').T[self_coord[1] - 1 - 1 , self_coord[0]]
+            new_fielddown = next_game_state.get('field').T[self_coord[1] + 1 -1, self_coord[0]]
+            new_fieldright = next_game_state.get('field').T[self_coord[1] -1, self_coord[0] + 1]
+            new_fieldleft = next_game_state.get('field').T[self_coord[1] -1, self_coord[0] - 1]
+
+            if(self_coord[1] - 1) > 5:
+                new_fieldup2 = next_game_state.get('field').T[self_coord[1] - 1 - 1 -1, self_coord[0]]
+                new_fieldup3 = next_game_state.get('field').T[self_coord[1] - 1 - 1 -1 -1, self_coord[0]]
+                new_fieldup4 = next_game_state.get('field').T[self_coord[1] - 1 - 1 -1 -1 -1, self_coord[0]]
+
+        if(e.MOVED_DOWN in events):
+            new_fieldup = next_game_state.get('field').T[self_coord[1] - 1 + 1 , self_coord[0]]
+            new_fielddown = next_game_state.get('field').T[self_coord[1] + 1 +1, self_coord[0]]
+            new_fieldright = next_game_state.get('field').T[self_coord[1] +1, self_coord[0] + 1]
+            new_fieldleft = next_game_state.get('field').T[self_coord[1] +1, self_coord[0] - 1]
+
+            if(self_coord[1] + 1) < 10:
+                new_fielddown2 = next_game_state.get('field').T[self_coord[1] + 1 +1 +1, self_coord[0]]
+                new_fielddown3 = next_game_state.get('field').T[self_coord[1] + 1 +1 +1 +1, self_coord[0]]
+                new_fielddown4 = next_game_state.get('field').T[self_coord[1] + 1 +1 +1 +1 +1, self_coord[0]]
+
+        if(e.MOVED_DOWN in events) or (e.MOVED_UP in events) or (e.MOVED_LEFT in events) or (e.MOVED_RIGHT in events):
+            if (old_fieldup != 1 and old_fielddown != 1 and old_fieldleft != 1 and old_fieldright != 1) and \
+                    (new_fieldup == 1 or new_fieldup2 == 1 or new_fieldup3 == 1  or new_fieldup4 == 1
+                     or new_fielddown == 1 or new_fielddown2 == 1 or new_fielddown3 == 1 or new_fielddown4 == 1
+                     or new_fieldleft == 1 or new_fieldleft2 == 1 or new_fieldleft3 == 1 or new_fieldleft4 == 1
+                    or new_fieldright == 1 or new_fieldright2 == 1 or new_fieldright3 == 1 or new_fieldright4 == 1):
+                events.append(e.MOVED_TOWARDS_CRATE)
+
+            if (new_fieldup != 1 and new_fieldup2 != 1 and new_fieldup3 != 1 and new_fieldup4 != 1
+                     and new_fielddown != 1 and new_fielddown2 != 1 and new_fielddown3 != 1 and new_fielddown4 != 1
+                     and new_fieldleft != 1 and new_fieldleft2 != 1 and new_fieldleft3 != 1 and new_fieldleft4 != 1
+                    and new_fieldright != 1 and new_fieldright2 != 1 and new_fieldright3 != 1 and new_fieldright3 != 4):
+
+                bomb_was_there = False
+                for i in range(len(bombs)):
+                    if(bombs[i][0] == self_coord):
+                        bomb_was_there = True
+                if not bomb_was_there:
+                    events.append(e.MOVED_AWAY_FROM_CRATE)
+        ##########
 
     for event in events:
         self.round_events.append(event)
+
+    if constants.EPS >= constants.EPS_END:
+        constants.EPS = constants.EPS - (constants.EPS / 10000)
+
     # state_to_features is defined in callbacks.py
     action = self_action
-    if (self_action != None):
+    if(self_action != None):
         action = self.actions.index(self_action)
 
-    transition = Transition(state_to_features(old_game_state), action, state_to_features(next_game_state),
-                            reward_from_events(self, events))
+    transition = Transition(state_to_features(old_game_state), action, state_to_features(next_game_state), reward_from_events(self, events))
     if transition[0] != None:
         self.transitions.append(transition)
-
-    # train the model after each step.
-    train_neural_network(self)
-
 
 
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
@@ -150,68 +233,75 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     :param self: The same object that is passed to all of your callbacks.
     """
     self.logger.debug(f'Encountered event(s) {", ".join(map(repr, events))} in final step')
-    # Determine Rewards from whole episode
+
     for event in events:
         self.round_events.append(event)
 
     self.rewards_list.append(reward_from_events(self, self.round_events))
 
+
     sum_reward_round = 0
     for reward in self.round_events:
-        if (reward == e.COIN_COLLECTED):
-            sum_reward_round += 1
-        elif (reward == e.KILLED_OPPONENT):
-            sum_reward_round += 5
+        if(reward==e.COIN_COLLECTED):
+            sum_reward_round+=1
+        elif(reward==e.KILLED_OPPONENT):
+            sum_reward_round+=5
     self.rewards_list_game.append(sum_reward_round)
 
     self.round_events = []
+
+    self.steps_list_game.append(last_game_state['step'])
 
     if last_game_state.get('round') % constants.PLOT_MEAN_OVER_ROUNDS == 0:
         self.reward_mean.append(np.mean(self.rewards_list[-constants.PLOT_MEAN_OVER_ROUNDS:]))
         self.reward_mean_game.append(np.mean(self.rewards_list_game[-constants.PLOT_MEAN_OVER_ROUNDS:]))
 
     if last_game_state.get('round') % constants.EPISODES_TO_PLOT == 0:
-        plt.subplot(121)
-        plt.plot(self.rewards_list)
-        plt.plot(np.arange(0, len(self.reward_mean)) * constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean)
+        plt.subplot(131)
+        plt.plot(np.arange(1, len(self.steps_list_game)+1), self.steps_list_game)
+        plt.xticks(np.arange(1, len(self.steps_list_game)+1, 1))
 
-        plt.subplot(122)
-        plt.plot(self.rewards_list_game)
-        plt.plot(np.arange(0, len(self.reward_mean_game)) * constants.PLOT_MEAN_OVER_ROUNDS, self.reward_mean_game)
-        plt.savefig(constants.NAME_OF_FILES + '_plot.png')
+        plt.subplot(132)
+        plt.plot(np.arange(1, len(self.rewards_list_game)+1), self.rewards_list_game)
+        plt.xticks(np.arange(1, len(self.rewards_list_game)+1, 1))
+
+        plt.subplot(133)
+        plt.xlim(0.5, 1.5)
+        plt.bar([1], [np.sum(self.rewards_list_game)], width=0.7)
+        plt.xticks([])
+        plt.xlabel('1000 rounds')
+
+        plt.savefig('19_crate_3peaceful_agents_EVAL.png')
 
     action = last_action
-    if (last_action != None):
+    if(last_action != None):
         action = self.actions.index(last_action)
 
     transition = Transition(state_to_features(last_game_state), action, None, reward_from_events(self, events))
-
     if transition[0] != None:
         self.transitions.append(transition)
 
-    if constants.EPS >= constants.EPS_END:
-        constants.EPS = constants.EPS - (constants.EPS / constants.EPS_DECAY)
+    constants.ROUNDS_NR = constants.ROUNDS_NR + 1
 
-    if last_game_state.get('round') % constants.ROUNDS_MODEL_UPDATE == 0:
-        self.target_model.load_state_dict(self.training_model.state_dict())
-        print()
-        print('UPDATE TARGET MODEL')
-        print()
+    if(constants.ROUNDS_NR%50 == 0):
+        self.target_model.load_state_dict(self.trainings_model.state_dict())
 
-    # Increase Steps per Round after particular Episodes
-    # if constants.ROUNDS_NR % constants.INCREASE_STEPS_AFTER_EPISODES == 0 and s.MAX_STEPS < 400:
-    #     s.MAX_STEPS = s.MAX_STEPS + constants.INCREASE_STEP_VALUE
-    # constants.ROUNDS_NR = constants.ROUNDS_NR +1
+    if constants.ROUNDS_NR%5000 == 0:
+        s.MAX_STEPS = s.MAX_STEPS + 20
+        constants.EPS = 0.6
+        if s.MAX_STEPS >= 400:
+            s.MAX_STEPS=400
+
+    sample_batch_and_train(self)
 
     print()
-    print('Epsilon: ' + str(constants.EPS))
+    print(str(constants.EPS))
     print()
 
 
     # Store the model
-    with open(constants.NAME_OF_FILES + ".pt", "wb") as file:
-        pickle.dump(self.training_model.cpu(), file)
-    self.training_model.cuda()
+    with open("B_M_I_Y_C_agent.pt", "wb") as file:
+        pickle.dump(self.trainings_model, file)
 
 
 def reward_from_events(self, events: List[str]) -> int:
@@ -221,28 +311,37 @@ def reward_from_events(self, events: List[str]) -> int:
     Here you can modify the rewards your agent get so as to en/discourage
     certain behavior.
     """
+
+#LAST VERSION GAME REWARDS CRATE DESTROYER AND AGAINST AGENTS!
     game_rewards = {
-        e.COIN_COLLECTED: 0.7,
-        e.KILLED_OPPONENT: 0.4,
-        e.INVALID_ACTION: -0.9,
-        e.COIN_FOUND: 0.01,
-        e.CRATE_DESTROYED: 0.15,
-        e.GOT_KILLED: -0.80,
-        e.KILLED_SELF: -1,
-        e.SURVIVED_ROUND: 0.8,
-        e.OPPONENT_ELIMINATED: 0.1,
+        e.WAITED: -25,
+        e.MOVED_UP: -15,
+        e.MOVED_DOWN: -15,
+        e.MOVED_LEFT: -15,
+        e.MOVED_RIGHT: -15,
+
+        e.INVALID_ACTION: -50,
+
+        e.COIN_COLLECTED: 350,
+        e.COIN_FOUND: 50,
+
+        e.KILLED_OPPONENT: 500,
+        e.KILLED_SELF: -300,
+        e.SURVIVED_ROUND: 50,
+        e.GOT_KILLED: -100,
+        e.SURVIVED_BOMB: 100,
+
+        e.CRATE_DESTROYED: 35,
+
         e.BOMB_DROPPED: 0,
-        e.BOMB_EXPLODED: 0,
-        e.SURVIVED_BOMB: 0.1,
-        e.PLACED_BOMB_FIRST_STEP: -0.7,  # Bomb in first step, is at all time bad
-        e.MOVED_UP: -0.08,
-        e.MOVED_DOWN: -0.08,
-        e.MOVED_LEFT: -0.08,
-        e.MOVED_RIGHT: -0.08,
-        e.WAITED: -0.4,
-        e.BOMB_PLACED_AT_CRATE: 0.2,
-        e.RETURN_TO_PREVIOUS_POS: -0.4
+        e.BOMB_PLACED_AT_CRATE: 125,
+        e.BOMB_PLACED_BAD: -85,
+
+        e.MOVED_TOWARDS_CRATE: 85,
+        e.RETURN_TO_PREVIOUS_POS: -35,
+        e.MOVED_AWAY_FROM_CRATE: -30
     }
+
     reward_sum = 0
     for event in events:
         if event in game_rewards:
@@ -250,30 +349,12 @@ def reward_from_events(self, events: List[str]) -> int:
     self.logger.info(f"Awarded {reward_sum} for events {', '.join(events)}")
     return reward_sum
 
+def sample_batch_and_train(self):
+    '''
+       Method updates the training_model, based on the training data which was collected by the agent during playing the game via Exploration/Explotation.
+       Parameters of the training such as Batch size, learning rate and so on can be modified in the constants.py
+    '''
 
-def sample_batch(self):
-    '''
-    Method samples a random Batch from transitions.
-    '''
-    return random.sample(self.transitions, constants.BATCH_SIZE)
-
-def load_training_data(self):
-    '''
-    Method loads training data, which was collected by the self playing strategy from the user_agent.
-    The training data will be added to the transitions buffer and used for training the model.
-    '''
-    with open("training_data.pt", "rb") as file:
-        transitions = pickle.load(file)
-
-    for transition in transitions:
-        trans = Transition(state_to_features(transition[0]), transition[1], state_to_features(transition[2]), reward_from_events(self, transition[3]))
-        self.transitions.append(trans)
-
-def train_neural_network(self):
-    '''
-    Method updates the training_model, based on the training data which was collected by the agent during playing the game via Exploration/Explotation.
-    Parameters of the training such as Batch size, learning rate and so on can be modified in the constants.py
-    '''
     if len(self.transitions) >= constants.BATCH_SIZE and self.train:
         batch = random.sample(self.transitions, constants.BATCH_SIZE)
         transitions = Transition(*zip(*batch))
@@ -286,8 +367,7 @@ def train_neural_network(self):
         reward = torch.tensor(transitions.reward)
         next_game_state = torch.cat(next_game_state_filled_val)
 
-
-        q_val_taken_actions = self.training_model(game_state.to(device='cuda:0')).gather(1, action.to(
+        q_val_taken_actions = self.trainings_model(game_state.to(device='cuda:0')).gather(1, action.to(
             device='cuda:0').unsqueeze(1))
 
         q_val_next_state = torch.max(self.target_model(next_game_state), dim=1).values.to(device='cuda')
@@ -296,8 +376,38 @@ def train_neural_network(self):
 
         final_state_action_values = (q_val_next_state_full * constants.GAMMA) + reward.to(device='cuda')
 
-        # calculate loss and make backpropagation
         loss = self.criterion(q_val_taken_actions, final_state_action_values.unsqueeze(1))
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+
+def reformat_large_tick_values(tick_val, pos):
+    """
+    Turns large tick values (in the billions, millions and thousands) such as 4500 into 4.5K
+    and also appropriately turns 4000 into 4K (no zero after the decimal).
+    """
+    if tick_val >= 1000000000:
+        val = round(tick_val / 1000000000, 1)
+        new_tick_format = '{:}B'.format(val)
+    elif tick_val >= 1000000:
+        val = round(tick_val / 1000000, 1)
+        new_tick_format = '{:}M'.format(val)
+    elif tick_val >= 1000:
+        val = round(tick_val / 1000, 1)
+        new_tick_format = '{:}K'.format(val)
+    elif tick_val < 1000:
+        new_tick_format = round(tick_val, 1)
+    else:
+        new_tick_format = tick_val
+
+    new_tick_format = str(new_tick_format)
+
+    index_of_decimal = new_tick_format.find(".")
+
+    if index_of_decimal != -1:
+        value_after_decimal = new_tick_format[index_of_decimal + 1]
+        if value_after_decimal == "0":
+            new_tick_format = new_tick_format[0:index_of_decimal] + new_tick_format[index_of_decimal + 2:]
+
+    return new_tick_format
